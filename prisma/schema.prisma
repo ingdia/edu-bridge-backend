@@ -1,0 +1,364 @@
+// prisma/schema.prisma
+// EDU-Bridge Database Schema - Aligned with SRS v1.0
+// Prisma Version: 5.22.0 | Database: PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────
+// ENUMS (SRS 2.3: User Classes & FR 3-4: Learning Types)
+// ─────────────────────────────────────────────────────────────
+
+enum Role {
+  STUDENT
+  MENTOR
+  ADMIN
+}
+
+enum ExerciseType {
+  LISTENING
+  SPEAKING
+  READING
+  WRITING
+  DIGITAL_LITERACY
+}
+
+enum ApplicationStatus {
+  DRAFT
+  SUBMITTED
+  REVIEWING
+  INTERVIEW
+  ACCEPTED
+  REJECTED
+}
+
+enum SessionStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+// ─────────────────────────────────────────────────────────────
+// CORE AUTH (SRS FR 1: Authentication & NFR 1: Security)
+// ─────────────────────────────────────────────────────────────
+
+model User {
+  id        String    @id @default(uuid())
+  email     String    @unique
+  password  String // Hashed with bcrypt (NFR 1)
+  role      Role      @default(STUDENT)
+  isActive  Boolean   @default(true)
+  lastLogin DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  studentProfile StudentProfile?
+  mentorProfile  MentorProfile?
+  adminProfile   AdminProfile?
+  auditLogs      AuditLog[]
+  refreshTokens  RefreshToken[]
+
+  @@index([email])
+  @@index([role, isActive])
+}
+
+// ─────────────────────────────────────────────────────────────
+// STUDENT PROFILE (SRS FR 2: Profile Management)
+// ─────────────────────────────────────────────────────────────
+
+model StudentProfile {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Personal Data
+  fullName    String
+  dateOfBirth DateTime
+  nationalId  String   @unique
+  schoolName  String   @default("GS Ruyenzi")
+  gradeLevel  String
+
+  // Parent/Guardian
+  guardianName    String?
+  guardianContact String?
+  relationship    String?
+
+  // Socio-Economic (Sensitive - NFR 10)
+  familyIncome     String?
+  occupation       String?
+  livingConditions String?
+
+  // Location
+  homeAddress String?
+  district    String?
+  province    String?
+
+  // Confidential Notes
+  mentorNotes String? @db.Text
+
+  // Primary Mentor Assignment (SRS FR 7)
+  assignedMentorId String?
+  assignedMentor   MentorProfile? @relation(fields: [assignedMentorId], references: [id], name: "AssignedMentor", onDelete: SetNull)
+
+  // Relations
+  progress        Progress[]
+  academicReports AcademicReport[]
+  mentorSessions  MentorshipSession[] @relation(name: "StudentSessions")
+  cv              CV?                 @relation(name: "StudentCV")
+  applications    JobApplication[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([nationalId])
+  @@index([district, gradeLevel])
+  @@index([assignedMentorId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// MENTOR PROFILE (SRS FR 7: Mentorship)
+// ─────────────────────────────────────────────────────────────
+
+model MentorProfile {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  expertise String[]
+  bio       String?  @db.Text
+
+  // Primary Assigned Students
+  assignedStudents StudentProfile[] @relation(name: "AssignedMentor")
+
+  // Session-Based Interactions
+  sessions MentorshipSession[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// ADMIN PROFILE
+// ─────────────────────────────────────────────────────────────
+
+model AdminProfile {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  permissions String[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// LEARNING MODULES & PROGRESS (SRS FR 3-4)
+// ─────────────────────────────────────────────────────────────
+
+model LearningModule {
+  id                String       @id @default(uuid())
+  title             String
+  description       String?      @db.Text
+  type              ExerciseType
+  contentUrl        String
+  difficulty        String
+  estimatedDuration Int?
+
+  progress Progress[]
+
+  isActive   Boolean @default(true)
+  orderIndex Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([type, difficulty])
+  @@index([isActive, orderIndex])
+}
+
+model Progress {
+  id        String         @id @default(uuid())
+  studentId String
+  student   StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  moduleId String
+  module   LearningModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  score       Int?
+  feedback    String?   @db.Text
+  completedAt DateTime?
+  timeSpent   Int?
+
+  // Offline Sync Support (SRS 2.4)
+  isSynced     Boolean   @default(true)
+  lastSyncedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([studentId, moduleId])
+  @@index([studentId, completedAt])
+  @@index([moduleId, score])
+}
+
+// ─────────────────────────────────────────────────────────────
+// ACADEMIC REPORTS (SRS FR 5)
+// ─────────────────────────────────────────────────────────────
+
+model AcademicReport {
+  id        String         @id @default(uuid())
+  studentId String
+  student   StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  term     String
+  year     Int
+  fileUrl  String
+  fileName String?
+  fileSize Int?
+
+  subjects     Json?
+  overallGrade String?
+  remarks      String? @db.Text
+
+  enteredBy  String
+  verifiedBy String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([studentId, year, term])
+  @@index([enteredBy])
+}
+
+// ─────────────────────────────────────────────────────────────
+// MENTORSHIP SESSIONS (SRS FR 7)
+// ─────────────────────────────────────────────────────────────
+
+model MentorshipSession {
+  id String @id @default(uuid())
+
+  mentorId String
+  mentor   MentorProfile @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+
+  studentId String
+  student   StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade, name: "StudentSessions")
+
+  scheduledFor DateTime
+  duration     Int      @default(60)
+  location     String?
+
+  notes       String?       @db.Text
+  actionItems String?       @db.Text
+  status      SessionStatus @default(SCHEDULED)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([studentId, scheduledFor])
+  @@index([mentorId, status])
+}
+
+// ─────────────────────────────────────────────────────────────
+// INCREMENT 2: CAREER GUIDANCE (SRS FR 8)
+// ─────────────────────────────────────────────────────────────
+
+model CV {
+  id        String         @id @default(uuid())
+  studentId String         @unique
+  student   StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade, name: "StudentCV")
+
+  content            Json
+  template           String? @default("standard")
+  isSharedWithMentor Boolean @default(true)
+
+  // ← OPPOSITE RELATION FOR JobApplication.cv (FIX)
+  jobApplications JobApplication[] @relation(name: "CVApplications")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([studentId])
+}
+
+model JobApplication {
+  id        String         @id @default(uuid())
+  studentId String
+  student   StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  position       String
+  organization   String
+  type           String
+  deadline       DateTime?
+  applicationUrl String?
+
+  status      ApplicationStatus @default(DRAFT)
+  submittedAt DateTime?
+  response    String?           @db.Text
+
+  // Supporting Docs - FIXED RELATION
+  cvId        String?
+  cv          CV?     @relation(fields: [cvId], references: [id], name: "CVApplications", onDelete: SetNull)
+  coverLetter String? @db.Text
+
+  notes String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([studentId, status])
+  @@index([type, deadline])
+}
+
+// ─────────────────────────────────────────────────────────────
+// SYSTEM: AUDIT & SECURITY (SRS NFR 1, 5, 10)
+// ─────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  action     String
+  entityType String?
+  entityId   String?
+
+  ipAddress String?
+  userAgent String?
+
+  details Json?
+
+  timestamp DateTime @default(now())
+
+  @@index([userId, timestamp])
+  @@index([action, timestamp])
+}
+
+model RefreshToken {
+  id     String @id @default(uuid())
+  token  String @unique
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  expiresAt DateTime
+  revoked   Boolean  @default(false)
+  ipAddress String?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, revoked])
+}
