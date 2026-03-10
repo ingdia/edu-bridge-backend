@@ -42,6 +42,8 @@ export type AuditAction =
   // ─────────────────────────────────────────────────────────────
   // ACADEMIC REPORTS (FR 5)
   // ─────────────────────────────────────────────────────────────
+  | 'ACADEMIC_REPORT_UPLOAD'
+  | 'ACADEMIC_REPORT_MANUAL_ENTRY'
   | 'GRADE_UPDATE'
   | 'REPORT_UPLOAD'
   | 'REPORT_VIEW'
@@ -59,6 +61,7 @@ export type AuditAction =
   // ─────────────────────────────────────────────────────────────
   | 'CV_CREATE'
   | 'CV_UPDATE'
+  | 'APPLICATION_CREATE'
   | 'APPLICATION_SUBMIT'
   | 'APPLICATION_UPDATE'
   | 'OPPORTUNITY_MATCH_VIEW'

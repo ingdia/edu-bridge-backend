@@ -7,6 +7,9 @@ import authRoutes from './routes/auth.routes';
 import profileRoutes from './routes/profile.routes';
 import moduleRoutes from './routes/module.routes';
 import progressRoutes from './routes/progress.routes';
+import academicRoutes from './routes/academic.routes';
+import mentorshipRoutes from './routes/mentorship.routes';
+import careerRoutes from './routes/career.routes';
 
 const app: Application = express();
 
@@ -66,6 +69,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes); 
 app.use('/api', moduleRoutes);
 app.use('/api/progress', progressRoutes);
+app.use('/api/academic', academicRoutes);
+app.use('/api/mentorship', mentorshipRoutes);
+app.use('/api/career', careerRoutes);
 // ─────────────────────────────────────────────────────────────
 // GLOBAL ERROR HANDLER (SRS NFR 1: Security & Stability)
 // ─────────────────────────────────────────────────────────────
