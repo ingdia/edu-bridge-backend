@@ -19,7 +19,7 @@ export const createModule = async (
   ipAddress?: string
 ) => {
   const module = await prisma.learningModule.create({
-     {
+    data: {
       ...data,
       contentUrl: data.contentUrl.trim(),
       title: data.title.trim(),
@@ -34,7 +34,7 @@ export const createModule = async (
   );
 
   return {
-     module,
+    data: { module },
     message: 'Learning module created successfully',
   };
 };
@@ -85,7 +85,7 @@ export const getModuleById = async (
   }
 
   return {
-     module,
+    data: { module },
   };
 };
 
@@ -162,7 +162,7 @@ export const listModules = async (
   }
 
   return {
-     modules,
+    data: { modules },
     pagination: {
       page,
       limit,
@@ -205,7 +205,7 @@ export const updateModule = async (
 
   const updatedModule = await prisma.learningModule.update({
     where: { id: moduleId },
-     updateData,
+    data: updateData,
   });
 
   await logAudit(
@@ -220,7 +220,7 @@ export const updateModule = async (
   );
 
   return {
-     updatedModule,
+    data: { updatedModule },
     message: 'Module updated successfully',
   };
 };
@@ -255,7 +255,7 @@ export const deleteModule = async (
     // ✅ Soft delete: Set isActive = false (recommended)
     result = await prisma.learningModule.update({
       where: { id: moduleId },
-       { isActive: false },
+      data: { isActive: false },
     });
   }
 
@@ -271,7 +271,7 @@ export const deleteModule = async (
   );
 
   return {
-     result,
+    data: { result },
     message: hardDelete ? 'Module permanently deleted' : 'Module deactivated',
   };
 };
@@ -296,7 +296,7 @@ export const toggleModuleStatus = async (
 
   const updated = await prisma.learningModule.update({
     where: { id: moduleId },
-     { isActive: !module.isActive },
+    data: { isActive: !module.isActive },
   });
 
   await logAudit(
@@ -312,7 +312,7 @@ export const toggleModuleStatus = async (
   );
 
   return {
-     updated,
+    data: { updated },
     message: `Module ${updated.isActive ? 'activated' : 'deactivated'}`,
   };
 };
@@ -350,38 +350,25 @@ export const getModulesForMentor = async (
     select: {
       id: true,
       title: true,
+      description: true,
       type: true,
       difficulty: true,
       estimatedDuration: true,
       orderIndex: true,
-      // Include progress count for this mentor's students
-      progress: {
-        where: { studentId: { in: studentIds } },
-        select: { id: true, completedAt: true, score: true },
-      },
+      isActive: true,
     },
-    orderBy: [{ orderIndex: 'asc' }, { createdAt: 'desc' }],
+    orderBy: { orderIndex: 'asc' },
   });
-
-  // Transform to include student progress summary
-  const modulesWithProgress = modules.map(mod => ({
-    ...mod,
-    studentProgressCount: mod.progress.length,
-    completedCount: mod.progress.filter(p => p.completedAt).length,
-    averageScore: mod.progress.filter(p => p.score !== null)
-      .reduce((acc, p) => acc + (p.score || 0), 0) / 
-      Math.max(mod.progress.filter(p => p.score !== null).length, 1),
-  }));
 
   await logAudit(
     mentorUserId,
     'MODULE_LIST',
-    { context: 'mentor_dashboard', resultsCount: modulesWithProgress.length },
+    { filters, resultsCount: modules.length, role: 'MENTOR' },
     ipAddress
   );
 
   return {
-    data: modulesWithProgress,
+    data: { modules },
   };
 };
 
@@ -457,6 +444,6 @@ export const getModulesForStudent = async (
   );
 
   return {
-     modulesWithProgress,
+    data: { modulesWithProgress },
   };
 };
