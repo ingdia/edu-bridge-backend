@@ -15,7 +15,7 @@ const envSchema = z.object({
   JWT_EXPIRES_IN: z.string().default('7d'), // e.g., '1h', '7d'
   
   // File Upload (for academic reports, CVs)
-  MAX_FILE_SIZE: z.string().transform((val) => parseInt(val, 10)).default('5242880'), // 5MB in bytes
+ MAX_FILE_SIZE: z.string().default('5242880').transform((val) => parseInt(val, 10)), // 5MB in bytes
 });
 
 // Validate and export
