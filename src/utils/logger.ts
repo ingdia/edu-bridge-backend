@@ -38,6 +38,14 @@ export type AuditAction =
   | 'MODULE_COMPLETE'       // User completed an exercise
   | 'PROGRESS_SUBMIT'       // User submitted progress/score
   | 'PROGRESS_VIEW'         // User/mentor viewed progress data
+  | 'EXERCISE_SUBMITTED'
+  | 'SPEAKING_EXERCISE_SUBMITTED'
+  | 'MENTOR_SUBMISSIONS_VIEWED'
+  | 'SUBMISSION_EVALUATED'
+  | 'EXERCISE_SUBMITTED'
+  | 'SPEAKING_EXERCISE_SUBMITTED'
+  | 'MENTOR_SUBMISSIONS_VIEWED'
+  | 'SUBMISSION_EVALUATED'
 
   // ─────────────────────────────────────────────────────────────
   // ACADEMIC REPORTS (FR 5)

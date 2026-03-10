@@ -115,6 +115,7 @@ model StudentProfile {
   mentorSessions  MentorshipSession[] @relation(name: "StudentSessions")
   cv              CV?                 @relation(name: "StudentCV")
   applications    JobApplication[]
+  exerciseSubmissions ExerciseSubmission[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -142,6 +143,9 @@ model MentorProfile {
 
   // Session-Based Interactions
   sessions MentorshipSession[]
+  
+  // Exercise Evaluations
+  exerciseEvaluations ExerciseSubmission[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -180,6 +184,7 @@ model LearningModule {
   estimatedDuration Int?
 
   progress Progress[]
+  exerciseSubmissions ExerciseSubmission[]
 
   isActive   Boolean @default(true)
   orderIndex Int     @default(0)
@@ -214,6 +219,53 @@ model Progress {
   @@unique([studentId, moduleId])
   @@index([studentId, completedAt])
   @@index([moduleId, score])
+}
+
+
+// ─────────────────────────────────────────────────────────────
+// EXERCISE SUBMISSIONS (SRS FR 3: Exercise Types)
+// ─────────────────────────────────────────────────────────────
+
+model ExerciseSubmission {
+  id        String         @id @default(uuid())
+  studentId String
+  student   StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  moduleId String
+  module   LearningModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  exerciseType ExerciseType
+  
+  // Flexible JSON for type-specific responses:
+  // • LISTENING/READING: { responses: [{ questionId, answer }] }
+  // • WRITING: { content, wordCount }
+  // • SPEAKING: { audioUrl, transcript, recordingDuration }
+  // • DIGITAL_LITERACY: { completed, artifactUrl, notes }
+  submissionContent Json
+
+  // Evaluation fields (nullable until mentor reviews)
+  score        Int?
+  feedback     String?      @db.Text
+  rubricScores Json?        // e.g., { "grammar": 8, "clarity": 9 }
+  isPassed     Boolean?
+  evaluatedAt  DateTime?
+  evaluatedBy  String?
+  evaluator    MentorProfile? @relation(fields: [evaluatedBy], references: [id], onDelete: SetNull)
+
+  status       String       @default("pending") // "pending" | "evaluated"
+  submittedAt  DateTime     @default(now())
+
+  // Offline sync support (matches Progress pattern)
+  isSynced     Boolean      @default(true)
+  lastSyncedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([studentId, submittedAt])
+  @@index([moduleId, exerciseType])
+  @@index([status, evaluatedAt])
+  @@index([studentId, status]) // For mentor dashboard filtering
 }
 
 // ─────────────────────────────────────────────────────────────
