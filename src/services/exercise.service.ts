@@ -256,7 +256,8 @@ export class ExerciseService {
           student: {
             select: {
               id: true,
-              user: { select: { firstName: true, lastName: true, email: true } },
+              fullName: true,
+              user: { select: { email: true } },
             },
           },
           module: { select: { id: true, title: true, type: true } },
@@ -336,7 +337,8 @@ export class ExerciseService {
         student: {
           select: {
             id: true,
-            user: { select: { firstName: true, lastName: true, email: true } },
+            fullName: true,
+            user: { select: { email: true } },
           },
         },
       },
@@ -383,12 +385,13 @@ export class ExerciseService {
           student: {
             select: {
               id: true,
-              user: { select: { firstName: true, lastName: true, email: true } },
+              fullName: true,
+              user: { select: { email: true } },
             },
           },
           module: { select: { id: true, title: true, type: true } },
           evaluator: {
-            select: { id: true, user: { select: { firstName: true, lastName: true } } },
+            select: { id: true, user: { select: { email: true } } },
           },
         },
         orderBy: { [sortBy]: sortOrder },
