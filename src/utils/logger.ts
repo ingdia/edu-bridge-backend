@@ -63,21 +63,13 @@ export type AuditAction =
   | 'APPLICATION_UPDATE'
   | 'OPPORTUNITY_MATCH_VIEW'
 
-  // src/utils/logger.ts - ADD these to your existing AuditAction union:
-
-// ─────────────────────────────────────────────────────────────
-// LEARNING MODULES (FR 3-4)
-// ─────────────────────────────────────────────────────────────
-| 'MODULE_CREATE'          // Admin created a new learning module
-| 'MODULE_UPDATE'          // Admin updated module details
-| 'MODULE_DELETE'          // Admin deactivated a module
-| 'MODULE_STATUS_TOGGLE'   // Admin changed module active status
-| 'MODULE_LIST'            // User viewed list of learning modules
-| 'MODULE_VIEW'            // User viewed a single module's details
-| 'MODULE_START'           // Student started an exercise
-| 'MODULE_COMPLETE'        // Student completed an exercise
-| 'PROGRESS_SUBMIT'        // Student submitted progress/score
-| 'PROGRESS_VIEW' ;         // User/mentor viewed progress data
+  // ─────────────────────────────────────────────────────────────
+  // ADMIN MODULE MANAGEMENT
+  // ─────────────────────────────────────────────────────────────
+  | 'MODULE_CREATE'
+  | 'MODULE_UPDATE'
+  | 'MODULE_DELETE'
+  | 'MODULE_STATUS_TOGGLE';
 /**
  * Log an audit event to the database (SRS NFR 5: Auditability)
  * 

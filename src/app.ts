@@ -6,6 +6,7 @@ import { env } from './config/env';
 import authRoutes from './routes/auth.routes';
 import profileRoutes from './routes/profile.routes';
 import moduleRoutes from './routes/module.routes';
+import progressRoutes from './routes/progress.routes';
 
 const app: Application = express();
 
@@ -64,6 +65,7 @@ app.get('/api', (req: Request, res: Response) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes); 
 app.use('/api', moduleRoutes);
+app.use('/api/progress', progressRoutes);
 // ─────────────────────────────────────────────────────────────
 // GLOBAL ERROR HANDLER (SRS NFR 1: Security & Stability)
 // ─────────────────────────────────────────────────────────────
