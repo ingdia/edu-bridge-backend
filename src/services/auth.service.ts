@@ -53,7 +53,7 @@ export const registerUser = async (
         userId: user.id,
         fullName,
         dateOfBirth: new Date(dateOfBirth),
-        gradeLevel,
+         gradeLevel: gradeLevel || 'Senior Four',
         nationalId,
         guardianName: guardianName || null,
         guardianContact: guardianContact || null,

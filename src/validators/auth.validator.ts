@@ -32,7 +32,8 @@ export const registerSchema = z.object({
     .string()
     .min(2, 'Grade level must be at least 2 characters')
     .max(50, 'Grade level must be less than 50 characters')
-    .trim(),
+    .trim()
+    .optional(),
 
   // FR 2.1: Personal data (required for students)
   fullName: z
