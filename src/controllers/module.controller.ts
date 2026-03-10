@@ -36,7 +36,7 @@ export const createModuleHandler = async (req: Request, res: Response) => {
 
     res.status(201).json({
       success: true,
-       data: result.data,
+      data: result.data,
       message: result.message,
     });
   } catch (error: any) {
@@ -77,7 +77,7 @@ export const getModuleHandler = async (req: Request, res: Response) => {
 
     res.status(200).json({
       success: true,
-       data: result.data,
+      data: result.data,
     });
   } catch (error: any) {
     if (error.name === 'ZodError') {
@@ -121,7 +121,7 @@ export const listModulesHandler = async (req: Request, res: Response) => {
 
     res.status(200).json({
       success: true,
-       data: result.data,
+      data: result.data,
       pagination: result.pagination,
     });
   } catch (error: any) {
@@ -159,7 +159,7 @@ export const updateModuleHandler = async (req: Request, res: Response) => {
 
     res.status(200).json({
       success: true,
-       data: result.data,
+      data: result.data,
       message: result.message,
     });
   } catch (error: any) {
@@ -200,7 +200,7 @@ export const deleteModuleHandler = async (req: Request, res: Response) => {
 
     res.status(200).json({
       success: true,
-       data: result.data,
+      data: result.data,
       message: result.message,
     });
   } catch (error: any) {
@@ -240,7 +240,7 @@ export const toggleModuleStatusHandler = async (req: Request, res: Response) => 
 
     res.status(200).json({
       success: true,
-       data: result.data,
+      data: result.data,
       message: result.message,
     });
   } catch (error: any) {
@@ -286,7 +286,7 @@ export const getModulesForMentorHandler = async (req: Request, res: Response) =>
 
     res.status(200).json({
       success: true,
-       data: result.data,
+      data: result.data,
     });
   } catch (error: any) {
     if (error.message === 'Mentor profile not found') {
@@ -324,7 +324,7 @@ export const getModulesForStudentHandler = async (req: Request, res: Response) =
 
     res.status(200).json({
       success: true,
-       data: result.data,
+      data: result.data,
     });
   } catch (error: any) {
     if (error.message === 'Student profile not found') {
