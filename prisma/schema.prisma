@@ -45,6 +45,28 @@ enum SessionStatus {
   NO_SHOW
 }
 
+enum NotificationType {
+  SESSION_REMINDER
+  DEADLINE_ALERT
+  FEEDBACK_RECEIVED
+  APPLICATION_UPDATE
+  SYSTEM_ANNOUNCEMENT
+}
+
+enum NotificationStatus {
+  UNREAD
+  READ
+  ARCHIVED
+}
+
+enum OpportunityType {
+  JOB
+  INTERNSHIP
+  SCHOLARSHIP
+  UNIVERSITY
+  TRAINING
+}
+
 // ─────────────────────────────────────────────────────────────
 // CORE AUTH (SRS FR 1: Authentication & NFR 1: Security)
 // ─────────────────────────────────────────────────────────────
@@ -116,6 +138,8 @@ model StudentProfile {
   cv              CV?                 @relation(name: "StudentCV")
   applications    JobApplication[]
   exerciseSubmissions ExerciseSubmission[]
+  notifications   Notification[]
+  digitalLiteracyProgress DigitalLiteracyProgress[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -146,6 +170,9 @@ model MentorProfile {
   
   // Exercise Evaluations
   exerciseEvaluations ExerciseSubmission[]
+  
+  // Notifications sent by mentor
+  sentNotifications Notification[] @relation(name: "MentorNotifications")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -163,6 +190,10 @@ model AdminProfile {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   permissions String[]
+  
+  // Relations
+  sentNotifications Notification[] @relation(name: "AdminNotifications")
+  managedOpportunities Opportunity[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -413,4 +444,109 @@ model RefreshToken {
   createdAt DateTime @default(now())
 
   @@index([userId, revoked])
+}
+
+// ─────────────────────────────────────────────────────────────
+// DIGITAL LITERACY MODULES (SRS FR 4)
+// ─────────────────────────────────────────────────────────────
+
+model DigitalLiteracyProgress {
+  id        String         @id @default(uuid())
+  studentId String
+  student   StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  lessonTitle String
+  lessonType  String // "email", "computer_basics", "internet_safety", "digital_communication"
+  
+  completed   Boolean   @default(false)
+  score       Int?
+  completedAt DateTime?
+  
+  practiceData Json? // Stores practice exercises, simulations, etc.
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([studentId, lessonType])
+  @@index([completed])
+}
+
+// ─────────────────────────────────────────────────────────────
+// NOTIFICATIONS SYSTEM (SRS FR 9)
+// ─────────────────────────────────────────────────────────────
+
+model Notification {
+  id        String   @id @default(uuid())
+  
+  recipientId String
+  recipient   StudentProfile @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+  
+  type    NotificationType
+  status  NotificationStatus @default(UNREAD)
+  
+  title   String
+  message String @db.Text
+  
+  // Optional links
+  actionUrl String?
+  metadata  Json? // Additional context (session ID, application ID, etc.)
+  
+  // Sender tracking (optional)
+  sentByMentorId String?
+  sentByMentor   MentorProfile? @relation(fields: [sentByMentorId], references: [id], name: "MentorNotifications", onDelete: SetNull)
+  
+  sentByAdminId String?
+  sentByAdmin   AdminProfile? @relation(fields: [sentByAdminId], references: [id], name: "AdminNotifications", onDelete: SetNull)
+  
+  // Email notification tracking
+  emailSent   Boolean   @default(false)
+  emailSentAt DateTime?
+  
+  readAt DateTime?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([recipientId, status])
+  @@index([type, createdAt])
+  @@index([status, createdAt])
+}
+
+// ─────────────────────────────────────────────────────────────
+// OPPORTUNITY MATCHING (SRS FR 8.3)
+// ─────────────────────────────────────────────────────────────
+
+model Opportunity {
+  id String @id @default(uuid())
+  
+  title        String
+  organization String
+  type         OpportunityType
+  description  String @db.Text
+  
+  // Requirements
+  minGrade        String? // e.g., "60%", "B+"
+  requiredSkills  String[] // e.g., ["English", "Computer Literacy"]
+  gradeLevel      String[] // e.g., ["S4", "S5", "S6"]
+  location        String?
+  
+  // Application details
+  applicationUrl String?
+  deadline       DateTime?
+  contactEmail   String?
+  
+  // Metadata
+  isActive    Boolean @default(true)
+  postedBy    String?
+  postedByAdmin AdminProfile? @relation(fields: [postedBy], references: [id], onDelete: SetNull)
+  
+  viewCount   Int @default(0)
+  applyCount  Int @default(0)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([type, isActive])
+  @@index([deadline, isActive])
+  @@index([gradeLevel])
 }
