@@ -126,7 +126,7 @@ export const logAudit = async (
       data: {
         userId,
         action,
-        details: (details || {}) as Prisma.InputJsonValue, // ✅ Cast for Prisma
+        details: (details || {}) as any, // ✅ Cast for Prisma
         ipAddress: ipAddress || null,
       },
     });
@@ -161,7 +161,7 @@ export const logAuditBatch = async (
       data: entries.map(({ userId, action, details, ipAddress }) => ({
         userId,
         action,
-        details: (details || {}) as Prisma.InputJsonValue, // ✅ Cast for Prisma
+        details: (details || {}) as any, // ✅ Cast for Prisma
         ipAddress: ipAddress || null,
       })),
     });

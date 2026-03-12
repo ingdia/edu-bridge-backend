@@ -41,7 +41,7 @@ export const searchStudents = async (query: string, filters?: {
     orderBy: { fullName: 'asc' },
   });
 
-  return students.map((student) => ({
+  return students.map((student: any) => ({
     id: student.id,
     userId: student.userId,
     fullName: student.fullName,
@@ -98,7 +98,7 @@ export const searchModules = async (query: string, filters?: {
     orderBy: { orderIndex: 'asc' },
   });
 
-  return modules.map((module) => ({
+  return modules.map((module: any) => ({
     id: module.id,
     title: module.title,
     description: module.description,
