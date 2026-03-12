@@ -88,6 +88,7 @@ model User {
   adminProfile   AdminProfile?
   auditLogs      AuditLog[]
   refreshTokens  RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
 
   @@index([email])
   @@index([role, isActive])
@@ -127,6 +128,9 @@ model StudentProfile {
   // Confidential Notes
   mentorNotes String? @db.Text
 
+  // Profile Photo
+  profilePhotoUrl String?
+
   // Primary Mentor Assignment (SRS FR 7)
   assignedMentorId String?
   assignedMentor   MentorProfile? @relation(fields: [assignedMentorId], references: [id], name: "AssignedMentor", onDelete: SetNull)
@@ -162,6 +166,9 @@ model MentorProfile {
   expertise String[]
   bio       String?  @db.Text
 
+  // Profile Photo
+  profilePhotoUrl String?
+
   // Primary Assigned Students
   assignedStudents StudentProfile[] @relation(name: "AssignedMentor")
 
@@ -190,6 +197,9 @@ model AdminProfile {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   permissions String[]
+
+  // Profile Photo
+  profilePhotoUrl String?
   
   // Relations
   sentNotifications Notification[] @relation(name: "AdminNotifications")
@@ -484,6 +494,20 @@ model RefreshToken {
   createdAt DateTime @default(now())
 
   @@index([userId, revoked])
+}
+
+model PasswordResetToken {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, used])
 }
 
 // ─────────────────────────────────────────────────────────────

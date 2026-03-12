@@ -17,6 +17,9 @@ import opportunityRoutes from './routes/opportunity.routes';
 import messageRoutes from './routes/message.routes';
 import fileRoutes from './routes/file.routes';
 import analyticsRoutes from './routes/analytics.routes';
+import passwordResetRoutes from './routes/passwordReset.routes';
+import profilePhotoRoutes from './routes/profilePhoto.routes';
+import { apiLimiter, authLimiter } from './middlewares/rateLimiter.middleware';
 
 const app: Application = express();
 
@@ -48,6 +51,10 @@ app.use(morgan('combined'));
 // 4. JSON Parser: Limit payload size to prevent DoS (SRS NFR 2: Performance)
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// 5. Rate Limiting: Protect against brute force and DoS attacks
+app.use('/api/', apiLimiter);
+app.use('/api/auth', authLimiter);
 
 // ─────────────────────────────────────────────────────────────
 // ROUTES (Placeholder for Future Steps)
@@ -86,6 +93,8 @@ app.use('/api/opportunities', opportunityRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/files', fileRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/password-reset', passwordResetRoutes);
+app.use('/api/profile-photo', profilePhotoRoutes);
 // ─────────────────────────────────────────────────────────────
 // GLOBAL ERROR HANDLER (SRS NFR 1: Security & Stability)
 // ─────────────────────────────────────────────────────────────

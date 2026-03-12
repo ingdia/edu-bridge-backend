@@ -30,6 +30,9 @@ const envSchema = z.object({
   SMTP_PASSWORD: z.string().optional(),
   EMAIL_FROM: z.string().email().default('noreply@edu-bridge.rw'),
   EMAIL_FROM_NAME: z.string().default('EDU-Bridge Platform'),
+  
+  // Frontend URL (for password reset links)
+  FRONTEND_URL: z.string().url().default('http://localhost:3000'),
 });
 
 // Validate and export

@@ -19,7 +19,11 @@ export type AuditAction =
   | 'USER_LOGIN'
   | 'USER_LOGOUT'
   | 'PASSWORD_RESET'
+  | 'PASSWORD_RESET_REQUESTED'
+  | 'PASSWORD_RESET_COMPLETED'
   | 'TOKEN_REFRESH'
+  | 'PROFILE_PHOTO_UPLOADED'
+  | 'PROFILE_PHOTO_DELETED'
 
   // ─────────────────────────────────────────────────────────────
   // PROFILE MANAGEMENT (FR 2)
