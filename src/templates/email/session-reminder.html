@@ -1,0 +1,39 @@
+<!-- src/templates/email/session-reminder.html -->
+<h2>📅 Upcoming Mentorship Session Reminder</h2>
+
+<p>Hello <strong>{{recipientName}}</strong>,</p>
+
+<p>This is a friendly reminder about your upcoming mentorship session:</p>
+
+<div class="info-box">
+    <p><strong>📍 Session Details:</strong></p>
+    <ul>
+        <li><strong>Date:</strong> {{sessionDate}}</li>
+        <li><strong>Time:</strong> {{sessionTime}}</li>
+        <li><strong>Duration:</strong> {{duration}} minutes</li>
+        <li><strong>Location:</strong> {{location}}</li>
+        {{#if mentorName}}
+        <li><strong>Mentor:</strong> {{mentorName}}</li>
+        {{/if}}
+        {{#if studentName}}
+        <li><strong>Student:</strong> {{studentName}}</li>
+        {{/if}}
+    </ul>
+</div>
+
+{{#if notes}}
+<p><strong>Session Notes:</strong></p>
+<p>{{notes}}</p>
+{{/if}}
+
+<p>Please make sure to:</p>
+<ul>
+    <li>✅ Arrive on time</li>
+    <li>✅ Bring any materials or questions you have</li>
+    <li>✅ Be prepared to discuss your progress</li>
+</ul>
+
+<p>If you need to reschedule, please contact your {{#if isMentor}}student{{else}}mentor{{/if}} as soon as possible.</p>
+
+<p>Best regards,<br>
+<strong>EDU-Bridge Team</strong></p>

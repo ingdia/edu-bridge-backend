@@ -1,0 +1,38 @@
+<!-- src/templates/email/application-update.html -->
+<h2>📬 Application Status Update</h2>
+
+<p>Hello <strong>{{studentName}}</strong>,</p>
+
+<p>There's an update on your application:</p>
+
+<div class="info-box">
+    <p><strong>📄 Application Details:</strong></p>
+    <ul>
+        <li><strong>Position:</strong> {{position}}</li>
+        <li><strong>Organization:</strong> {{organization}}</li>
+        <li><strong>Type:</strong> {{type}}</li>
+        <li><strong>Status:</strong> <strong>{{status}}</strong></li>
+        {{#if deadline}}
+        <li><strong>Deadline:</strong> {{deadline}}</li>
+        {{/if}}
+    </ul>
+</div>
+
+{{#if response}}
+<p><strong>Response from Organization:</strong></p>
+<div class="info-box">
+    <p>{{response}}</p>
+</div>
+{{/if}}
+
+{{#if nextSteps}}
+<p><strong>Next Steps:</strong></p>
+<p>{{nextSteps}}</p>
+{{/if}}
+
+<a href="{{platformUrl}}/applications/{{applicationId}}" class="button">View Application</a>
+
+<p>Good luck with your application!</p>
+
+<p>Best regards,<br>
+<strong>EDU-Bridge Team</strong></p>

@@ -1,0 +1,15 @@
+<!-- src/templates/email/notification-generic.html -->
+<h2>{{title}}</h2>
+
+<p>Hello <strong>{{recipientName}}</strong>,</p>
+
+<p>{{message}}</p>
+
+{{#if actionUrl}}
+<a href="{{platformUrl}}{{actionUrl}}" class="button">View Details</a>
+{{/if}}
+
+<p>If you have any questions, please contact your mentor or administrator.</p>
+
+<p>Best regards,<br>
+<strong>EDU-Bridge Team</strong></p>

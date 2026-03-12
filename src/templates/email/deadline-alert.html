@@ -1,0 +1,36 @@
+<!-- src/templates/email/deadline-alert.html -->
+<h2>⏰ Application Deadline Approaching</h2>
+
+<p>Hello <strong>{{studentName}}</strong>,</p>
+
+<p>This is a reminder that the deadline for your application is approaching soon!</p>
+
+<div class="info-box">
+    <p><strong>⚠️ Urgent Application:</strong></p>
+    <ul>
+        <li><strong>Position:</strong> {{position}}</li>
+        <li><strong>Organization:</strong> {{organization}}</li>
+        <li><strong>Deadline:</strong> <strong style="color: #e74c3c;">{{deadline}}</strong></li>
+        <li><strong>Days Remaining:</strong> {{daysRemaining}} days</li>
+        <li><strong>Current Status:</strong> {{status}}</li>
+    </ul>
+</div>
+
+{{#if isNotSubmitted}}
+<p style="color: #e74c3c;"><strong>⚠️ Action Required:</strong> Your application has not been submitted yet!</p>
+{{/if}}
+
+<p><strong>What to do next:</strong></p>
+<ul>
+    <li>✅ Review your application materials</li>
+    <li>✅ Complete any missing information</li>
+    <li>✅ Submit before the deadline</li>
+    <li>✅ Contact your mentor if you need help</li>
+</ul>
+
+<a href="{{platformUrl}}/applications/{{applicationId}}" class="button">Complete Application</a>
+
+<p>Don't miss this opportunity!</p>
+
+<p>Best regards,<br>
+<strong>EDU-Bridge Team</strong></p>

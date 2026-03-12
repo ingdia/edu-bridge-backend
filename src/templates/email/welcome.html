@@ -1,0 +1,50 @@
+<!-- src/templates/email/welcome.html -->
+<h2>🎉 Welcome to EDU-Bridge!</h2>
+
+<p>Hello <strong>{{userName}}</strong>,</p>
+
+<p>Welcome to the EDU-Bridge platform! We're excited to have you join our community of learners and mentors.</p>
+
+<div class="info-box">
+    <p><strong>Your Account Details:</strong></p>
+    <ul>
+        <li><strong>Email:</strong> {{email}}</li>
+        <li><strong>Role:</strong> {{role}}</li>
+        <li><strong>School:</strong> {{schoolName}}</li>
+    </ul>
+</div>
+
+<p><strong>What you can do on EDU-Bridge:</strong></p>
+<ul>
+    {{#if isStudent}}
+    <li>📚 Access English and Digital Literacy learning modules</li>
+    <li>🎯 Track your progress and performance</li>
+    <li>👨‍🏫 Connect with mentors for guidance</li>
+    <li>💼 Build your CV and track job/university applications</li>
+    <li>📊 View your academic reports and grades</li>
+    {{/if}}
+    {{#if isMentor}}
+    <li>👥 Guide and support assigned students</li>
+    <li>📝 Review and evaluate student submissions</li>
+    <li>📅 Schedule mentorship sessions</li>
+    <li>💬 Communicate with students via messaging</li>
+    <li>📊 Monitor student progress and performance</li>
+    {{/if}}
+    {{#if isAdmin}}
+    <li>⚙️ Manage learning modules and content</li>
+    <li>👥 Oversee students, mentors, and system operations</li>
+    <li>📊 Access analytics and reports</li>
+    <li>🔔 Send notifications and announcements</li>
+    <li>🎯 Create and manage opportunities</li>
+    {{/if}}
+</ul>
+
+<a href="{{platformUrl}}/login" class="button">Login to Your Account</a>
+
+<p><strong>Need Help?</strong></p>
+<p>If you have any questions or need assistance, please don't hesitate to reach out to your mentor or administrator.</p>
+
+<p>Let's start your learning journey!</p>
+
+<p>Best regards,<br>
+<strong>EDU-Bridge Team</strong></p>

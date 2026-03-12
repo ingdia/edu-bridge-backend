@@ -1,0 +1,46 @@
+<!-- src/templates/email/feedback-received.html -->
+<h2>📝 Your Exercise Has Been Evaluated</h2>
+
+<p>Hello <strong>{{studentName}}</strong>,</p>
+
+<p>Great news! Your mentor has evaluated your exercise submission.</p>
+
+<div class="info-box">
+    <p><strong>📚 Exercise Details:</strong></p>
+    <ul>
+        <li><strong>Module:</strong> {{moduleTitle}}</li>
+        <li><strong>Type:</strong> {{exerciseType}}</li>
+        <li><strong>Submitted:</strong> {{submittedDate}}</li>
+        {{#if score}}
+        <li><strong>Score:</strong> {{score}}/100</li>
+        {{/if}}
+        {{#if isPassed}}
+        <li><strong>Status:</strong> ✅ Passed</li>
+        {{else}}
+        <li><strong>Status:</strong> ⚠️ Needs Improvement</li>
+        {{/if}}
+    </ul>
+</div>
+
+{{#if feedback}}
+<p><strong>Mentor Feedback:</strong></p>
+<div class="info-box">
+    <p>{{feedback}}</p>
+</div>
+{{/if}}
+
+{{#if rubricScores}}
+<p><strong>Detailed Scores:</strong></p>
+<ul>
+    {{#each rubricScores}}
+    <li><strong>{{@key}}:</strong> {{this}}/10</li>
+    {{/each}}
+</ul>
+{{/if}}
+
+<a href="{{platformUrl}}/exercises/{{submissionId}}" class="button">View Full Feedback</a>
+
+<p>Keep up the great work! Continue practicing to improve your skills.</p>
+
+<p>Best regards,<br>
+<strong>EDU-Bridge Team</strong></p>

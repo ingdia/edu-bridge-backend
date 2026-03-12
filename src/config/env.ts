@@ -22,6 +22,14 @@ const envSchema = z.object({
   CLOUDINARY_CLOUD_NAME: z.string().min(1, 'Cloudinary cloud name is required'),
   CLOUDINARY_API_KEY: z.string().min(1, 'Cloudinary API key is required'),
   CLOUDINARY_API_SECRET: z.string().min(1, 'Cloudinary API secret is required'),
+  
+  // Email Configuration (SMTP)
+  SMTP_HOST: z.string().default('smtp.gmail.com'),
+  SMTP_PORT: z.string().default('587').transform((val) => parseInt(val, 10)),
+  SMTP_USER: z.string().email().optional(),
+  SMTP_PASSWORD: z.string().optional(),
+  EMAIL_FROM: z.string().email().default('noreply@edu-bridge.rw'),
+  EMAIL_FROM_NAME: z.string().default('EDU-Bridge Platform'),
 });
 
 // Validate and export

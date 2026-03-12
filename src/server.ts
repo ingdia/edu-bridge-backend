@@ -3,6 +3,7 @@ import 'dotenv/config';
 import app from './app';
 import prisma from './config/database';
 import { env } from './config/env';
+import { startAllCronJobs } from './jobs/sessionReminder.job';
 
 async function startServer() {
   try {
@@ -10,12 +11,17 @@ async function startServer() {
     await prisma.$connect();
     console.log('✅ Database connected successfully');
 
+    // Start Cron Jobs
+    startAllCronJobs();
+    console.log('✅ Cron jobs started successfully');
+
     // Start HTTP Server
     app.listen(env.PORT, () => {
       console.log(`🚀 EDU-Bridge Server running on port ${env.PORT}`);
       console.log(`📦 Environment: ${env.NODE_ENV}`);
       console.log(`🔒 Security: Helmet & CORS enabled`);
       console.log(`📝 Logging: Morgan enabled`);
+      console.log(`⏰ Cron Jobs: Session reminders & deadline alerts active`);
     });
 
   } catch (error) {
