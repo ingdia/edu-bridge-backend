@@ -19,6 +19,15 @@ import fileRoutes from './routes/file.routes';
 import analyticsRoutes from './routes/analytics.routes';
 import passwordResetRoutes from './routes/passwordReset.routes';
 import profilePhotoRoutes from './routes/profilePhoto.routes';
+import audioRoutes from './routes/audio.routes';
+import auditLogRoutes from './routes/auditLog.routes';
+import adminDashboardRoutes from './routes/adminDashboard.routes';
+import sessionSchedulingRoutes from './routes/sessionScheduling.routes';
+import academicReportScanningRoutes from './routes/academicReportScanning.routes';
+import bulkOperationsRoutes from './routes/bulkOperations.routes';
+import opportunityMatchingRoutes from './routes/opportunityMatching.routes';
+import emailSimulationRoutes from './routes/emailSimulation.routes';
+import offlineSyncRoutes from './routes/offlineSync.routes';
 import { apiLimiter, authLimiter } from './middlewares/rateLimiter.middleware';
 
 const app: Application = express();
@@ -95,6 +104,15 @@ app.use('/api/files', fileRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/password-reset', passwordResetRoutes);
 app.use('/api/profile-photo', profilePhotoRoutes);
+app.use('/api/audio', audioRoutes);
+app.use('/api/audit-logs', auditLogRoutes);
+app.use('/api/admin/dashboard', adminDashboardRoutes);
+app.use('/api/sessions', sessionSchedulingRoutes);
+app.use('/api/report-scanning', academicReportScanningRoutes);
+app.use('/api/bulk', bulkOperationsRoutes);
+app.use('/api/matching', opportunityMatchingRoutes);
+app.use('/api/email-simulation', emailSimulationRoutes);
+app.use('/api/offline-sync', offlineSyncRoutes);
 // ─────────────────────────────────────────────────────────────
 // GLOBAL ERROR HANDLER (SRS NFR 1: Security & Stability)
 // ─────────────────────────────────────────────────────────────
