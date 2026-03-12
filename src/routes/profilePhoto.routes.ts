@@ -15,7 +15,7 @@ router.post(
   '/',
   authenticate,
   uploadLimiter,
-  uploadImage.single('photo'),
+  uploadImage,
   uploadProfilePhotoController
 );
 
