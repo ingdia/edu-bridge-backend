@@ -10,6 +10,10 @@ import progressRoutes from './routes/progress.routes';
 import academicRoutes from './routes/academic.routes';
 import mentorshipRoutes from './routes/mentorship.routes';
 import careerRoutes from './routes/career.routes';
+import exerciseRoutes from './routes/exercise.routes';
+import digitalLiteracyRoutes from './routes/digitalLiteracy.routes';
+import notificationRoutes from './routes/notification.routes';
+import opportunityRoutes from './routes/opportunity.routes';
 
 const app: Application = express();
 
@@ -72,6 +76,10 @@ app.use('/api/progress', progressRoutes);
 app.use('/api/academic', academicRoutes);
 app.use('/api/mentorship', mentorshipRoutes);
 app.use('/api/career', careerRoutes);
+app.use('/api/exercises', exerciseRoutes);
+app.use('/api/digital-literacy', digitalLiteracyRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/opportunities', opportunityRoutes);
 // ─────────────────────────────────────────────────────────────
 // GLOBAL ERROR HANDLER (SRS NFR 1: Security & Stability)
 // ─────────────────────────────────────────────────────────────

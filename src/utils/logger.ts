@@ -74,6 +74,9 @@ export type AuditAction =
   | 'APPLICATION_SUBMIT'
   | 'APPLICATION_UPDATE'
   | 'OPPORTUNITY_MATCH_VIEW'
+  | 'OPPORTUNITY_CREATED'
+  | 'OPPORTUNITY_UPDATED'
+  | 'OPPORTUNITY_DELETED'
 
   // ─────────────────────────────────────────────────────────────
   // ADMIN MODULE MANAGEMENT
