@@ -1,6 +1,5 @@
 // src/services/analytics.service.ts
 import prisma from '../config/database';
-import { ExerciseType } from '@prisma/client';
 
 // ─────────────────────────────────────────────────────────────
 // SYSTEM OVERVIEW ANALYTICS
@@ -85,9 +84,9 @@ export const getStudentPerformanceAnalytics = async (filters?: {
   });
 
   const studentsWithAvgScore = topStudents
-    .map((student) => {
-      const scores = student.progress.map((p) => p.score).filter((s) => s !== null) as number[];
-      const avgScore = scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
+    .map((student: any) => {
+      const scores = student.progress.map((p: any) => p.score).filter((s: any) => s !== null) as number[];
+      const avgScore = scores.length > 0 ? scores.reduce((a: number, b: number) => a + b, 0) / scores.length : 0;
 
       return {
         id: student.id,
@@ -111,7 +110,7 @@ export const getStudentPerformanceAnalytics = async (filters?: {
     select: { score: true },
   });
 
-  const allScores = allProgress.map((p) => p.score).filter((s) => s !== null) as number[];
+  const allScores = allProgress.map((p: any) => p.score).filter((s: any) => s !== null) as number[];
   const overallAverage = allScores.length > 0 ? allScores.reduce((a, b) => a + b, 0) / allScores.length : 0;
 
   return {
@@ -146,8 +145,8 @@ export const getModuleEngagementAnalytics = async () => {
     },
   });
 
-  const moduleStats = modules.map((module) => {
-    const completedCount = module.progress.filter((p) => p.completedAt !== null).length;
+  const moduleStats = modules.map((module: any) => {
+    const completedCount = module.progress.filter((p: any) => p.completedAt !== null).length;
     const scores = module.progress.map((p) => p.score).filter((s) => s !== null) as number[];
     const avgScore = scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
 
@@ -168,8 +167,9 @@ export const getModuleEngagementAnalytics = async () => {
   moduleStats.sort((a, b) => b.totalAttempts - a.totalAttempts);
 
   // Get engagement by exercise type
+  const exerciseTypes = ['LISTENING', 'SPEAKING', 'READING', 'WRITING', 'DIGITAL_LITERACY'] as const;
   const engagementByType = await Promise.all(
-    Object.values(ExerciseType).map(async (type) => {
+    exerciseTypes.map(async (type) => {
       const count = await prisma.exerciseSubmission.count({
         where: { exerciseType: type },
       });

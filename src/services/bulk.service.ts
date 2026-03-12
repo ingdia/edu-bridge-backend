@@ -1,5 +1,6 @@
 // src/services/bulk.service.ts
 import prisma from '../config/database';
+import { Prisma } from '@prisma/client';
 import { logAuditBatch } from '../utils/logger';
 import { hashPassword } from '../utils/password';
 import { notificationService } from './notification.service';
@@ -50,7 +51,7 @@ export const bulkImportStudents = async (
       const defaultPassword = await hashPassword('Student@123');
 
       // Create user and student profile in transaction
-      await prisma.$transaction(async (tx) => {
+      await prisma.$transaction(async (tx: Omit<typeof prisma, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'>) => {
         const user = await tx.user.create({
           data: {
             email: studentData.email,

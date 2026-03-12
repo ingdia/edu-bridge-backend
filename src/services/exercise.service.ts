@@ -1,5 +1,5 @@
-import { ExerciseType, SessionStatus } from '@prisma/client';
 import prisma from '../config/database';
+import { Prisma } from '@prisma/client';
 import { logAudit } from '../utils/logger';
 import { uploadToCloudinary, UploadResult } from '../utils/fileUpload';
 import { 
@@ -7,6 +7,22 @@ import {
   GetSubmissionsQuery, 
   EvaluateSubmissionInput 
 } from '../validators/exercise.validator';
+
+// Define enum types locally
+const ExerciseType = {
+  LISTENING: 'LISTENING',
+  SPEAKING: 'SPEAKING',
+  READING: 'READING',
+  WRITING: 'WRITING',
+  DIGITAL_LITERACY: 'DIGITAL_LITERACY',
+} as const;
+
+const SessionStatus = {
+  SCHEDULED: 'SCHEDULED',
+  COMPLETED: 'COMPLETED',
+  CANCELLED: 'CANCELLED',
+  NO_SHOW: 'NO_SHOW',
+} as const;
 
 export class ExerciseService {
 
@@ -49,7 +65,7 @@ export class ExerciseService {
     }
 
     // Create submission + optionally update progress
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: Omit<typeof prisma, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'>) => {
       const submission = await tx.exerciseSubmission.create({
         data: {
           studentId,
@@ -155,7 +171,7 @@ export class ExerciseService {
     studentId: string,
     filters: GetSubmissionsQuery
   ): Promise<{ data: { submissions: any[]; summary: any; pagination: any }; message: string }> {
-    const { moduleId, exerciseType, status, sortBy, sortOrder, limit, page } = filters;
+    const { moduleId, exerciseType, status, sortBy, sortOrder, limit = 10, page = 1 } = filters;
     const skip = (page - 1) * limit;
 
     const where: any = { studentId };
@@ -169,7 +185,7 @@ export class ExerciseService {
         include: {
           module: { select: { id: true, title: true, type: true, difficulty: true } },
         },
-        orderBy: { [sortBy]: sortOrder },
+        orderBy: { [sortBy as string]: sortOrder },
         skip,
         take: limit,
       }),
@@ -201,15 +217,15 @@ export class ExerciseService {
     mentorId: string,
     filters: GetSubmissionsQuery
   ): Promise<{ data: { submissions: any[]; summary: any; pagination: any }; message: string }> {
-    const { studentId, moduleId, exerciseType, status, sortBy, sortOrder, limit, page } = filters;
+    const { studentId, moduleId, exerciseType, status, sortBy, sortOrder, limit = 10, page = 1 } = filters;
     const skip = (page - 1) * limit;
 
     // Get assigned student IDs
     const sessions = await prisma.mentorshipSession.findMany({
-      where: { mentorId, status: { in: [SessionStatus.SCHEDULED, SessionStatus.COMPLETED] } },
+      where: { mentorId, status: { in: [SessionStatus.SCHEDULED as any, SessionStatus.COMPLETED as any] } },
       select: { studentId: true },
     });
-    const assignedStudentIds = sessions.map(s => s.studentId);
+    const assignedStudentIds = sessions.map((s: any) => s.studentId);
 
     if (assignedStudentIds.length === 0) {
       return { data: { submissions: [], summary: {}, pagination: { total: 0, page, limit } }, message: 'No assigned students' };
@@ -241,7 +257,7 @@ export class ExerciseService {
           },
           module: { select: { id: true, title: true, type: true } },
         },
-        orderBy: { [sortBy]: sortOrder },
+        orderBy: { [sortBy as string]: sortOrder },
         skip,
         take: limit,
       }),
@@ -252,7 +268,7 @@ export class ExerciseService {
       total,
       pending: submissions.filter((s: any) => s.status === 'pending').length,
       evaluated: submissions.filter((s: any) => s.status === 'evaluated').length,
-      byType: Object.values(ExerciseType).reduce((acc: any, type) => {
+      byType: ['LISTENING', 'SPEAKING', 'READING', 'WRITING', 'DIGITAL_LITERACY'].reduce((acc: any, type) => {
         acc[type] = submissions.filter((s: any) => s.exerciseType === type).length;
         return acc;
       }, {}),
@@ -292,7 +308,7 @@ export class ExerciseService {
       where: {
         mentorId,
         studentId: submission.studentId,
-        status: { in: [SessionStatus.SCHEDULED, SessionStatus.COMPLETED] },
+        status: { in: [SessionStatus.SCHEDULED as any, SessionStatus.COMPLETED as any] },
       },
     });
     if (!assignment) {
@@ -348,7 +364,7 @@ export class ExerciseService {
    * Admin: Get all submissions with filters
    */
   static async getAllSubmissions(filters: GetSubmissionsQuery) {
-    const { moduleId, exerciseType, studentId, status, sortBy, sortOrder, limit, page } = filters;
+    const { moduleId, exerciseType, studentId, status, sortBy, sortOrder, limit = 10, page = 1 } = filters;
     const skip = (page - 1) * limit;
 
     const where: any = {};
@@ -373,7 +389,7 @@ export class ExerciseService {
             select: { id: true, user: { select: { email: true } } },
           },
         },
-        orderBy: { [sortBy]: sortOrder },
+        orderBy: { [sortBy as string]: sortOrder },
         skip,
         take: limit,
       }),

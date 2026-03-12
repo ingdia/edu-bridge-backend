@@ -4,33 +4,53 @@ import { uploadToCloudinary, deleteFromCloudinary } from '../utils/fileUpload';
 import { logAudit } from '../utils/logger';
 import type { Role } from '../utils/jwt';
 
-const profileModels = {
-  STUDENT: prisma.studentProfile,
-  MENTOR: prisma.mentorProfile,
-  ADMIN: prisma.adminProfile,
-} as const;
-
 export const uploadProfilePhoto = async (
   userId: string,
   role: Role,
   file: Express.Multer.File
 ): Promise<string> => {
-  const result = await uploadToCloudinary(file, 'profile-photos');
-  const model = profileModels[role];
+  const result = await uploadToCloudinary(file.buffer, file.originalname, 'IMAGE');
 
-  const profile = await model.findUnique({
-    where: { userId },
-    select: { profilePhotoUrl: true },
-  });
+  let oldPhotoUrl: string | null = null;
 
-  await model.update({
-    where: { userId },
-    data: { profilePhotoUrl: result.secure_url },
-  });
+  if (role === 'STUDENT') {
+    const profile = await prisma.studentProfile.findUnique({
+      where: { userId },
+      select: { profilePhotoUrl: true },
+    });
+    oldPhotoUrl = profile?.profilePhotoUrl || null;
 
-  if (profile?.profilePhotoUrl) {
+    await prisma.studentProfile.update({
+      where: { userId },
+      data: { profilePhotoUrl: result.url },
+    });
+  } else if (role === 'MENTOR') {
+    const profile = await prisma.mentorProfile.findUnique({
+      where: { userId },
+      select: { profilePhotoUrl: true },
+    });
+    oldPhotoUrl = profile?.profilePhotoUrl || null;
+
+    await prisma.mentorProfile.update({
+      where: { userId },
+      data: { profilePhotoUrl: result.url },
+    });
+  } else if (role === 'ADMIN') {
+    const profile = await prisma.adminProfile.findUnique({
+      where: { userId },
+      select: { profilePhotoUrl: true },
+    });
+    oldPhotoUrl = profile?.profilePhotoUrl || null;
+
+    await prisma.adminProfile.update({
+      where: { userId },
+      data: { profilePhotoUrl: result.url },
+    });
+  }
+
+  if (oldPhotoUrl) {
     try {
-      await deleteFromCloudinary(profile.profilePhotoUrl);
+      await deleteFromCloudinary(oldPhotoUrl);
     } catch (error) {
       console.error('Failed to delete old profile photo:', error);
     }
@@ -38,27 +58,52 @@ export const uploadProfilePhoto = async (
 
   await logAudit(userId, 'PROFILE_PHOTO_UPLOADED', {
     role,
-    photoUrl: result.secure_url,
+    photoUrl: result.url,
   });
 
-  return result.secure_url;
+  return result.url;
 };
 
 export const deleteProfilePhoto = async (userId: string, role: Role): Promise<void> => {
-  const model = profileModels[role];
+  let photoUrl: string | null = null;
 
-  const profile = await model.findUnique({
-    where: { userId },
-    select: { profilePhotoUrl: true },
-  });
+  if (role === 'STUDENT') {
+    const profile = await prisma.studentProfile.findUnique({
+      where: { userId },
+      select: { profilePhotoUrl: true },
+    });
+    photoUrl = profile?.profilePhotoUrl || null;
 
-  await model.update({
-    where: { userId },
-    data: { profilePhotoUrl: null },
-  });
+    await prisma.studentProfile.update({
+      where: { userId },
+      data: { profilePhotoUrl: null },
+    });
+  } else if (role === 'MENTOR') {
+    const profile = await prisma.mentorProfile.findUnique({
+      where: { userId },
+      select: { profilePhotoUrl: true },
+    });
+    photoUrl = profile?.profilePhotoUrl || null;
 
-  if (profile?.profilePhotoUrl) {
-    await deleteFromCloudinary(profile.profilePhotoUrl);
+    await prisma.mentorProfile.update({
+      where: { userId },
+      data: { profilePhotoUrl: null },
+    });
+  } else if (role === 'ADMIN') {
+    const profile = await prisma.adminProfile.findUnique({
+      where: { userId },
+      select: { profilePhotoUrl: true },
+    });
+    photoUrl = profile?.profilePhotoUrl || null;
+
+    await prisma.adminProfile.update({
+      where: { userId },
+      data: { profilePhotoUrl: null },
+    });
+  }
+
+  if (photoUrl) {
+    await deleteFromCloudinary(photoUrl);
   }
 
   await logAudit(userId, 'PROFILE_PHOTO_DELETED', { role });
