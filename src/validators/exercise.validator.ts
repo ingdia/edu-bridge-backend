@@ -1,5 +1,15 @@
 import { z } from 'zod';
-import { ExerciseType } from '@prisma/client';
+
+// Define ExerciseType enum locally
+const ExerciseType = {
+  LISTENING: 'LISTENING',
+  SPEAKING: 'SPEAKING',
+  READING: 'READING',
+  WRITING: 'WRITING',
+  DIGITAL_LITERACY: 'DIGITAL_LITERACY',
+} as const;
+
+type ExerciseTypeValue = typeof ExerciseType[keyof typeof ExerciseType];
 
 // Base schema
 export const exerciseSubmissionBaseSchema = z.object({
@@ -68,7 +78,7 @@ export type ExerciseSubmissionInput = z.infer<typeof exerciseSubmissionSchema>;
 // Query filters
 export const getSubmissionsQuerySchema = z.object({
   moduleId: z.string().uuid().optional(),
-  exerciseType: z.nativeEnum(ExerciseType).optional(),
+  exerciseType: z.enum(['LISTENING', 'SPEAKING', 'READING', 'WRITING', 'DIGITAL_LITERACY']).optional(),
   studentId: z.string().uuid().optional(),
   status: z.enum(['pending', 'evaluated', 'all']).default('all'),
   sortBy: z.enum(['submittedAt', 'score', 'updatedAt']).default('submittedAt'),

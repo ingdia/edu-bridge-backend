@@ -98,7 +98,7 @@ export const getStudentPerformanceAnalytics = async (filters?: {
         completedExercises: scores.length,
       };
     })
-    .sort((a, b) => b.averageScore - a.averageScore)
+    .sort((a: any, b: any) => b.averageScore - a.averageScore)
     .slice(0, filters?.limit || 10);
 
   // Get overall statistics
@@ -111,7 +111,7 @@ export const getStudentPerformanceAnalytics = async (filters?: {
   });
 
   const allScores = allProgress.map((p: any) => p.score).filter((s: any) => s !== null) as number[];
-  const overallAverage = allScores.length > 0 ? allScores.reduce((a, b) => a + b, 0) / allScores.length : 0;
+  const overallAverage = allScores.length > 0 ? allScores.reduce((a: number, b: number) => a + b, 0) / allScores.length : 0;
 
   return {
     topStudents: studentsWithAvgScore,
@@ -147,8 +147,8 @@ export const getModuleEngagementAnalytics = async () => {
 
   const moduleStats = modules.map((module: any) => {
     const completedCount = module.progress.filter((p: any) => p.completedAt !== null).length;
-    const scores = module.progress.map((p) => p.score).filter((s) => s !== null) as number[];
-    const avgScore = scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
+    const scores = module.progress.map((p: any) => p.score).filter((s: any) => s !== null) as number[];
+    const avgScore = scores.length > 0 ? scores.reduce((a: number, b: number) => a + b, 0) / scores.length : 0;
 
     return {
       id: module.id,
@@ -164,7 +164,7 @@ export const getModuleEngagementAnalytics = async () => {
   });
 
   // Sort by popularity (total attempts)
-  moduleStats.sort((a, b) => b.totalAttempts - a.totalAttempts);
+  moduleStats.sort((a: any, b: any) => b.totalAttempts - a.totalAttempts);
 
   // Get engagement by exercise type
   const exerciseTypes = ['LISTENING', 'SPEAKING', 'READING', 'WRITING', 'DIGITAL_LITERACY'] as const;
@@ -214,19 +214,19 @@ export const getMentorEffectivenessAnalytics = async () => {
     },
   });
 
-  const mentorStats = mentors.map((mentor) => {
+  const mentorStats = mentors.map((mentor: any) => {
     const totalSessions = mentor.sessions.length;
-    const completedSessions = mentor.sessions.filter((s) => s.status === 'COMPLETED').length;
+    const completedSessions = mentor.sessions.filter((s: any) => s.status === 'COMPLETED').length;
     const evaluationsCount = mentor.exerciseEvaluations.length;
 
     // Calculate average score of assigned students
     const allScores: number[] = [];
-    mentor.assignedStudents.forEach((student) => {
-      student.progress.forEach((p) => {
+    mentor.assignedStudents.forEach((student: any) => {
+      student.progress.forEach((p: any) => {
         if (p.score !== null) allScores.push(p.score);
       });
     });
-    const avgStudentScore = allScores.length > 0 ? allScores.reduce((a, b) => a + b, 0) / allScores.length : 0;
+    const avgStudentScore = allScores.length > 0 ? allScores.reduce((a: number, b: number) => a + b, 0) / allScores.length : 0;
 
     return {
       id: mentor.id,
@@ -244,8 +244,8 @@ export const getMentorEffectivenessAnalytics = async () => {
     mentors: mentorStats,
     summary: {
       totalMentors: mentors.length,
-      totalSessions: mentorStats.reduce((sum, m) => sum + m.totalSessions, 0),
-      totalEvaluations: mentorStats.reduce((sum, m) => sum + m.evaluationsCount, 0),
+      totalSessions: mentorStats.reduce((sum: number, m: any) => sum + m.totalSessions, 0),
+      totalEvaluations: mentorStats.reduce((sum: number, m: any) => sum + m.evaluationsCount, 0),
     },
   };
 };
@@ -275,7 +275,7 @@ export const getProgressOverTime = async (studentId?: string, days: number = 30)
   // Group by date
   const progressByDate: { [key: string]: { count: number; totalScore: number } } = {};
 
-  progress.forEach((p) => {
+  progress.forEach((p: any) => {
     if (p.completedAt) {
       const date = p.completedAt.toISOString().split('T')[0];
       if (!progressByDate[date]) {
@@ -328,7 +328,7 @@ export const getApplicationStatistics = async () => {
 
   return {
     total: totalApplications,
-    byStatus: byStatus.map((s) => ({ status: s.status, count: s._count })),
-    byType: byType.map((t) => ({ type: t.type, count: t._count })),
+    byStatus: byStatus.map((s: any) => ({ status: s.status, count: s._count })),
+    byType: byType.map((t: any) => ({ type: t.type, count: t._count })),
   };
 };

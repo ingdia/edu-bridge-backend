@@ -205,7 +205,7 @@ export class ExerciseService {
     };
 
     return {
-      data: { submissions, summary, pagination: { total, page, limit } },
+      data: { submissions, summary, pagination: { total, page: page as number, limit: limit as number } },
       message: 'Submissions retrieved successfully',
     };
   }
@@ -228,7 +228,7 @@ export class ExerciseService {
     const assignedStudentIds = sessions.map((s: any) => s.studentId);
 
     if (assignedStudentIds.length === 0) {
-      return { data: { submissions: [], summary: {}, pagination: { total: 0, page, limit } }, message: 'No assigned students' };
+      return { data: { submissions: [], summary: {}, pagination: { total: 0, page: page as number, limit: limit as number } }, message: 'No assigned students' };
     }
 
     const where: any = {
@@ -281,7 +281,7 @@ export class ExerciseService {
     );
 
     return {
-      data: { submissions, summary, pagination: { total, page, limit } },
+      data: { submissions, summary, pagination: { total, page: page as number, limit: limit as number } },
       message: 'Mentor submissions retrieved successfully',
     };
   }
@@ -401,11 +401,11 @@ export class ExerciseService {
         submissions,
         pagination: {
           total,
-          page,
-          limit,
-          totalPages: Math.ceil(total / limit),
-          hasNext: page * limit < total,
-          hasPrev: page > 1,
+          page: page as number,
+          limit: limit as number,
+          totalPages: Math.ceil(total / (limit as number)),
+          hasNext: (page as number) * (limit as number) < total,
+          hasPrev: (page as number) > 1,
         },
       },
       message: 'All submissions retrieved successfully',
