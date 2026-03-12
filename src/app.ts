@@ -28,6 +28,7 @@ import bulkOperationsRoutes from './routes/bulkOperations.routes';
 import opportunityMatchingRoutes from './routes/opportunityMatching.routes';
 import emailSimulationRoutes from './routes/emailSimulation.routes';
 import offlineSyncRoutes from './routes/offlineSync.routes';
+import healthRoutes from './routes/health.routes';
 import { apiLimiter, authLimiter } from './middlewares/rateLimiter.middleware';
 
 const app: Application = express();
@@ -79,6 +80,9 @@ app.get('/health', (req: Request, res: Response) => {
     uptime: process.uptime(),
   });
 });
+
+// Detailed Health Monitoring
+app.use('/api/health', healthRoutes);
 
 // API Versioning Root (SRS 3.3: Software Interfaces)
 app.get('/api', (req: Request, res: Response) => {
