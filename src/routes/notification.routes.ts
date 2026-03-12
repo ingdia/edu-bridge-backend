@@ -15,7 +15,7 @@ const router = Router();
 router.get(
   '/my-notifications',
   authenticate,
-  authorize(['STUDENT']),
+  authorize('STUDENT'),
   validate(getNotificationsQuerySchema),
   notificationController.getMyNotifications.bind(notificationController)
 );
@@ -23,28 +23,28 @@ router.get(
 router.get(
   '/unread-count',
   authenticate,
-  authorize(['STUDENT']),
+  authorize('STUDENT'),
   notificationController.getUnreadCount.bind(notificationController)
 );
 
 router.patch(
   '/:id/read',
   authenticate,
-  authorize(['STUDENT']),
+  authorize('STUDENT'),
   notificationController.markAsRead.bind(notificationController)
 );
 
 router.patch(
   '/mark-all-read',
   authenticate,
-  authorize(['STUDENT']),
+  authorize('STUDENT'),
   notificationController.markAllAsRead.bind(notificationController)
 );
 
 router.patch(
   '/:id/status',
   authenticate,
-  authorize(['STUDENT']),
+  authorize('STUDENT'),
   validate(updateNotificationSchema),
   notificationController.updateNotificationStatus.bind(notificationController)
 );
@@ -52,7 +52,7 @@ router.patch(
 router.delete(
   '/:id',
   authenticate,
-  authorize(['STUDENT']),
+  authorize('STUDENT'),
   notificationController.deleteNotification.bind(notificationController)
 );
 
@@ -60,7 +60,7 @@ router.delete(
 router.post(
   '/',
   authenticate,
-  authorize(['MENTOR', 'ADMIN']),
+  authorize('MENTOR', 'ADMIN'),
   validate(createNotificationSchema),
   notificationController.createNotification.bind(notificationController)
 );
@@ -68,7 +68,7 @@ router.post(
 router.post(
   '/bulk',
   authenticate,
-  authorize(['ADMIN']),
+  authorize('ADMIN'),
   validate(bulkNotificationSchema),
   notificationController.createBulkNotifications.bind(notificationController)
 );

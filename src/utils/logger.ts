@@ -61,6 +61,7 @@ export type AuditAction =
   // ─────────────────────────────────────────────────────────────
   | 'SESSION_CREATE'
   | 'SESSION_UPDATE'
+  | 'SESSION_RESCHEDULE'
   | 'SESSION_CANCEL'
   | 'MENTOR_MESSAGE_SEND'
 
@@ -80,7 +81,19 @@ export type AuditAction =
   | 'MODULE_CREATE'
   | 'MODULE_UPDATE'
   | 'MODULE_DELETE'
-  | 'MODULE_STATUS_TOGGLE';
+  | 'MODULE_STATUS_TOGGLE'
+
+  // ─────────────────────────────────────────────────────────────
+  // DIGITAL LITERACY (FR 6)
+  // ─────────────────────────────────────────────────────────────
+  | 'DIGITAL_LITERACY_LESSON_STARTED'
+  | 'DIGITAL_LITERACY_LESSON_COMPLETED'
+
+  // ─────────────────────────────────────────────────────────────
+  // NOTIFICATIONS
+  // ─────────────────────────────────────────────────────────────
+  | 'NOTIFICATION_CREATED'
+  | 'BULK_NOTIFICATIONS_CREATED';
 /**
  * Log an audit event to the database (SRS NFR 5: Auditability)
  * 

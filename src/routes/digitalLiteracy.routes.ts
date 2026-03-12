@@ -14,7 +14,7 @@ const router = Router();
 router.post(
   '/lessons/start',
   authenticate,
-  authorize(['STUDENT']),
+  authorize('STUDENT'),
   validate(startLessonSchema),
   digitalLiteracyController.startLesson.bind(digitalLiteracyController)
 );
@@ -22,7 +22,7 @@ router.post(
 router.post(
   '/lessons/complete',
   authenticate,
-  authorize(['STUDENT']),
+  authorize('STUDENT'),
   validate(completeLessonSchema),
   digitalLiteracyController.completeLesson.bind(digitalLiteracyController)
 );
@@ -30,7 +30,7 @@ router.post(
 router.get(
   '/my-progress',
   authenticate,
-  authorize(['STUDENT']),
+  authorize('STUDENT'),
   validate(getLessonsQuerySchema),
   digitalLiteracyController.getMyProgress.bind(digitalLiteracyController)
 );
@@ -38,7 +38,7 @@ router.get(
 router.get(
   '/my-stats',
   authenticate,
-  authorize(['STUDENT']),
+  authorize('STUDENT'),
   digitalLiteracyController.getMyStats.bind(digitalLiteracyController)
 );
 
@@ -46,7 +46,7 @@ router.get(
 router.get(
   '/all-progress',
   authenticate,
-  authorize(['MENTOR', 'ADMIN']),
+  authorize('MENTOR', 'ADMIN'),
   validate(getLessonsQuerySchema),
   digitalLiteracyController.getAllProgress.bind(digitalLiteracyController)
 );

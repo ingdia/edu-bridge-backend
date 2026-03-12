@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import '../middlewares/auth.middleware';
 import { MentorshipService } from '../services/mentorship.service';
-import { createSessionSchema, updateSessionSchema } from '../validators/mentorship.validator';
+import { createSessionSchema, updateSessionSchema, rescheduleSessionSchema, cancelSessionSchema, getSessionsQuerySchema } from '../validators/mentorship.validator';
 
 export class MentorshipController {
   static async createSession(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -47,6 +47,51 @@ export class MentorshipController {
     }
   }
 
+  static async rescheduleSession(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id } = req.params;
+      const validated = rescheduleSessionSchema.parse(req.body);
+      const mentorUserId = req.user?.userId;
+
+      if (!mentorUserId) {
+        res.status(401).json({ success: false, message: 'Authentication required' });
+        return;
+      }
+
+      const result = await MentorshipService.rescheduleSession(id, validated, mentorUserId);
+      res.status(200).json({ success: true, data: result.data, message: result.message });
+    } catch (error) {
+      if (error instanceof Error) {
+        res.status(400).json({ success: false, message: error.message });
+        return;
+      }
+      next(error);
+    }
+  }
+
+  static async cancelSession(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id } = req.params;
+      const validated = cancelSessionSchema.parse(req.body);
+      const userId = req.user?.userId;
+      const userRole = req.user?.role;
+
+      if (!userId || !userRole) {
+        res.status(401).json({ success: false, message: 'Authentication required' });
+        return;
+      }
+
+      const result = await MentorshipService.cancelSession(id, validated, userId, userRole);
+      res.status(200).json({ success: true, data: result.data, message: result.message });
+    } catch (error) {
+      if (error instanceof Error) {
+        res.status(400).json({ success: false, message: error.message });
+        return;
+      }
+      next(error);
+    }
+  }
+
   static async getMentorSessions(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const mentorUserId = req.user?.userId;
@@ -56,7 +101,8 @@ export class MentorshipController {
         return;
       }
 
-      const result = await MentorshipService.getMentorSessions(mentorUserId);
+      const filters = getSessionsQuerySchema.parse(req.query);
+      const result = await MentorshipService.getMentorSessions(mentorUserId, filters);
       res.status(200).json({ success: true, data: result.data, message: result.message });
     } catch (error) {
       if (error instanceof Error) {
@@ -76,7 +122,61 @@ export class MentorshipController {
         return;
       }
 
-      const result = await MentorshipService.getStudentSessions(studentUserId);
+      const filters = getSessionsQuerySchema.parse(req.query);
+      const result = await MentorshipService.getStudentSessions(studentUserId, filters);
+      res.status(200).json({ success: true, data: result.data, message: result.message });
+    } catch (error) {
+      if (error instanceof Error) {
+        res.status(400).json({ success: false, message: error.message });
+        return;
+      }
+      next(error);
+    }
+  }
+
+  static async getUpcomingSessions(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = req.user?.userId;
+      const userRole = req.user?.role;
+
+      if (!userId || !userRole) {
+        res.status(401).json({ success: false, message: 'Authentication required' });
+        return;
+      }
+
+      const result = await MentorshipService.getUpcomingSessions(userId, userRole);
+      res.status(200).json({ success: true, data: result.data, message: result.message });
+    } catch (error) {
+      if (error instanceof Error) {
+        res.status(400).json({ success: false, message: error.message });
+        return;
+      }
+      next(error);
+    }
+  }
+
+  static async getCalendarView(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = req.user?.userId;
+      const userRole = req.user?.role;
+      const { month, year } = req.query;
+
+      if (!userId || !userRole) {
+        res.status(401).json({ success: false, message: 'Authentication required' });
+        return;
+      }
+
+      if (!month || !year) {
+        res.status(400).json({ success: false, message: 'Month and year are required' });
+        return;
+      }
+
+      const result = await MentorshipService.getCalendarView(
+        userId,
+        userRole,
+        parseInt(month as string),
+        parseInt(year as string)
+      );
       res.status(200).json({ success: true, data: result.data, message: result.message });
     } catch (error) {
       if (error instanceof Error) {

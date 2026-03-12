@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { notificationService } from '../services/notification.service';
-import { auditLogger } from '../utils/logger';
+import { logAudit } from '../utils/logger';
 
 export class NotificationController {
   // Create a notification (mentor/admin only)
@@ -27,7 +27,7 @@ export class NotificationController {
         sendEmail,
       });
 
-      await auditLogger(userId, 'NOTIFICATION_CREATED', 'Notification', notification.id, {
+      await logAudit(userId, 'NOTIFICATION_CREATED', {
         recipientId,
         type,
       });
@@ -63,7 +63,7 @@ export class NotificationController {
         sendEmail,
       });
 
-      await auditLogger(userId, 'BULK_NOTIFICATIONS_CREATED', 'Notification', 'bulk', {
+      await logAudit(userId, 'BULK_NOTIFICATIONS_CREATED', {
         count: notifications.length,
         type,
       });

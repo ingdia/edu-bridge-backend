@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { digitalLiteracyService } from '../services/digitalLiteracy.service';
-import { auditLogger } from '../utils/logger';
+import { logAudit } from '../utils/logger';
 
 export class DigitalLiteracyController {
   // Start a digital literacy lesson
@@ -15,7 +15,9 @@ export class DigitalLiteracyController {
 
       const progress = await digitalLiteracyService.startLesson(userId, lessonTitle, lessonType);
 
-      await auditLogger(userId, 'DIGITAL_LITERACY_LESSON_STARTED', 'DigitalLiteracyProgress', progress.id, {
+      await logAudit(userId, 'DIGITAL_LITERACY_LESSON_STARTED', {
+        entityType: 'DigitalLiteracyProgress',
+        entityId: progress.id,
         lessonTitle,
         lessonType,
       });
@@ -48,7 +50,9 @@ export class DigitalLiteracyController {
         practiceData
       );
 
-      await auditLogger(userId, 'DIGITAL_LITERACY_LESSON_COMPLETED', 'DigitalLiteracyProgress', progress.id, {
+      await logAudit(userId, 'DIGITAL_LITERACY_LESSON_COMPLETED', {
+        entityType: 'DigitalLiteracyProgress',
+        entityId: progress.id,
         lessonTitle,
         lessonType,
         score,
