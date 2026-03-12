@@ -1,28 +1,14 @@
 import { ExerciseType, SessionStatus } from '@prisma/client';
 import prisma from '../config/database';
 import { logAudit } from '../utils/logger';
+import { uploadToCloudinary, UploadResult } from '../utils/fileUpload';
 import { 
   ExerciseSubmissionInput, 
   GetSubmissionsQuery, 
   EvaluateSubmissionInput 
 } from '../validators/exercise.validator';
-import * as fs from 'fs/promises';
-import * as path from 'path';
-
-const UPLOAD_DIR = process.env.FILE_UPLOAD_PATH || path.join(process.cwd(), 'uploads', 'exercises');
 
 export class ExerciseService {
-  private static async ensureUploadDir(): Promise<void> {
-    try {
-      await fs.access(UPLOAD_DIR);
-    } catch {
-      await fs.mkdir(UPLOAD_DIR, { recursive: true });
-    }
-  }
-
-  private static generateFilename(studentId: string, moduleId: string, ext: string): string {
-    return `exercise_${studentId}_${moduleId}_${Date.now()}_${Math.random().toString(36).substring(2, 8)}${ext}`;
-  }
 
   /**
    * Submit text-based exercise (LISTENING, READING, WRITING, DIGITAL_LITERACY)
@@ -122,25 +108,17 @@ export class ExerciseService {
 
     // Validate file
     if (!file) throw new Error('Audio file required');
-    const allowedTypes = ['audio/mpeg', 'audio/wav', 'audio/mp4', 'audio/ogg'];
+    const allowedTypes = ['audio/mpeg', 'audio/wav', 'audio/mp4', 'audio/ogg', 'audio/webm'];
     if (!allowedTypes.includes(file.mimetype)) {
-      throw new Error('Invalid audio format. Allowed: mp3, wav, m4a, ogg');
-    }
-    const maxSize = parseInt(process.env.MAX_FILE_SIZE || '5242880');
-    if (file.size > maxSize) {
-      throw new Error(`File too large. Max: ${maxSize / 1024 / 1024}MB`);
+      throw new Error('Invalid audio format. Allowed: mp3, wav, m4a, ogg, webm');
     }
 
-    // Save file (local dev) - for production, upload to S3/Cloudinary
-    await this.ensureUploadDir();
-    const ext = path.extname(file.originalname);
-    const filename = this.generateFilename(studentId, moduleId, ext);
-    const filePath = path.join(UPLOAD_DIR, filename);
-    await fs.writeFile(filePath, file.buffer);
-
-    const fileUrl = process.env.FILE_UPLOAD_BASE_URL 
-      ? `${process.env.FILE_UPLOAD_BASE_URL}/exercises/${filename}`
-      : `/api/files/exercises/${filename}`;
+    // Upload to Cloudinary
+    const uploadResult: UploadResult = await uploadToCloudinary(
+      file.buffer,
+      file.originalname,
+      'AUDIO'
+    );
 
     // Create submission record
     const submission = await prisma.exerciseSubmission.create({
@@ -152,8 +130,9 @@ export class ExerciseService {
           transcript: metadata.transcript,
           recordingDuration: metadata.recordingDuration,
           notes: metadata.notes,
-          audioUrl: fileUrl,
+          audioUrl: uploadResult.url,
           originalFilename: file.originalname,
+          publicId: uploadResult.publicId,
         } as any,
         status: 'pending',
         submittedAt: new Date(),
@@ -163,10 +142,10 @@ export class ExerciseService {
     await logAudit(
       studentId,
       'SPEAKING_EXERCISE_SUBMITTED',
-      { moduleId, filename, fileSize: file.size },
+      { moduleId, filename: file.originalname, fileSize: file.size, cloudinaryUrl: uploadResult.url },
     );
 
-    return { data: { submission, fileUrl }, message: 'Speaking exercise submitted successfully' };
+    return { data: { submission, fileUrl: uploadResult.url }, message: 'Speaking exercise submitted successfully' };
   }
 
   /**

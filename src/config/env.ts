@@ -15,7 +15,13 @@ const envSchema = z.object({
   JWT_EXPIRES_IN: z.string().default('7d'), // e.g., '1h', '7d'
   
   // File Upload (for academic reports, CVs)
- MAX_FILE_SIZE: z.string().default('5242880').transform((val) => parseInt(val, 10)), // 5MB in bytes
+  MAX_FILE_SIZE: z.string().default('5242880').transform((val) => parseInt(val, 10)), // 5MB in bytes
+  MAX_FILE_SIZE_MB: z.string().default('20').transform((val) => parseInt(val, 10)), // Max file size in MB
+  
+  // Cloudinary Configuration
+  CLOUDINARY_CLOUD_NAME: z.string().min(1, 'Cloudinary cloud name is required'),
+  CLOUDINARY_API_KEY: z.string().min(1, 'Cloudinary API key is required'),
+  CLOUDINARY_API_SECRET: z.string().min(1, 'Cloudinary API secret is required'),
 });
 
 // Validate and export
