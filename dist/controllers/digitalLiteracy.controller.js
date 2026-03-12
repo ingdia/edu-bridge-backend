@@ -1,7 +1,30 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.digitalLiteracyController = exports.DigitalLiteracyController = void 0;
-const digitalLiteracy_service_1 = require("../services/digitalLiteracy.service");
+const digitalLiteracyService = __importStar(require("../services/digitalLiteracy.service"));
 const logger_1 = require("../utils/logger");
 class DigitalLiteracyController {
     // Start a digital literacy lesson
@@ -12,7 +35,7 @@ class DigitalLiteracyController {
                 return res.status(401).json({ success: false, message: 'Unauthorized' });
             }
             const { lessonTitle, lessonType } = req.body;
-            const progress = await digitalLiteracy_service_1.digitalLiteracyService.startLesson(userId, lessonTitle, lessonType);
+            const progress = await digitalLiteracyService.startDigitalLiteracyLesson(userId, lessonTitle, lessonType);
             await (0, logger_1.logAudit)(userId, 'DIGITAL_LITERACY_LESSON_STARTED', {
                 entityType: 'DigitalLiteracyProgress',
                 entityId: progress.id,
@@ -37,10 +60,10 @@ class DigitalLiteracyController {
                 return res.status(401).json({ success: false, message: 'Unauthorized' });
             }
             const { lessonTitle, lessonType, score, practiceData } = req.body;
-            const progress = await digitalLiteracy_service_1.digitalLiteracyService.completeLesson(userId, lessonTitle, lessonType, score, practiceData);
+            const progress = await digitalLiteracyService.completeDigitalLiteracyLesson(userId, lessonTitle, score, practiceData);
             await (0, logger_1.logAudit)(userId, 'DIGITAL_LITERACY_LESSON_COMPLETED', {
                 entityType: 'DigitalLiteracyProgress',
-                entityId: progress.id,
+                entityId: progress.count.toString(),
                 lessonTitle,
                 lessonType,
                 score,
@@ -68,7 +91,7 @@ class DigitalLiteracyController {
                 filters.lessonType = lessonType;
             if (completed)
                 filters.completed = completed === 'true';
-            const progress = await digitalLiteracy_service_1.digitalLiteracyService.getStudentProgress(userId, filters);
+            const progress = await digitalLiteracyService.getDigitalLiteracyLessons(userId);
             res.status(200).json({
                 success: true,
                 data: progress,
@@ -85,7 +108,7 @@ class DigitalLiteracyController {
             if (!userId) {
                 return res.status(401).json({ success: false, message: 'Unauthorized' });
             }
-            const stats = await digitalLiteracy_service_1.digitalLiteracyService.getStudentStats(userId);
+            const stats = await digitalLiteracyService.getDigitalLiteracyProgressSummary(userId);
             res.status(200).json({
                 success: true,
                 data: stats,
@@ -104,7 +127,7 @@ class DigitalLiteracyController {
                 filters.lessonType = lessonType;
             if (completed)
                 filters.completed = completed === 'true';
-            const progress = await digitalLiteracy_service_1.digitalLiteracyService.getAllStudentsProgress(filters);
+            const progress = await digitalLiteracyService.getDigitalLiteracyLessons('all');
             res.status(200).json({
                 success: true,
                 data: progress,

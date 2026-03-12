@@ -26,8 +26,9 @@ export const academicReportScanningController = {
 
   async processReport(req: Request, res: Response) {
     try {
-      const { studentId, term, year } = req.body;
+      const { studentId, term, year, fileUrl } = req.body;
       const fileBuffer = req.file?.buffer;
+      const userId = req.user?.userId || 'system';
 
       if (!fileBuffer) {
         return res.status(400).json({ success: false, error: 'No file uploaded' });
@@ -37,7 +38,9 @@ export const academicReportScanningController = {
         fileBuffer,
         studentId,
         term,
-        parseInt(year)
+        parseInt(year),
+        fileUrl || 'uploaded',
+        userId
       );
 
       res.json({ success: true, data: result });

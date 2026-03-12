@@ -1,30 +1,10 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const multer_1 = __importDefault(require("multer"));
 const auth_middleware_1 = require("../middlewares/auth.middleware");
 const exercise_controller_1 = require("../controllers/exercise.controller");
+const upload_middleware_1 = require("../middlewares/upload.middleware");
 const router = (0, express_1.Router)();
-// Configure multer for memory storage (for Render compatibility)
-// For production: configure multer-s3 or cloud storage adapter
-const upload = (0, multer_1.default)({
-    storage: multer_1.default.memoryStorage(),
-    limits: {
-        fileSize: parseInt(process.env.MAX_FILE_SIZE || '5242880'), // 5MB default
-    },
-    fileFilter: (req, file, cb) => {
-        const allowed = ['audio/mpeg', 'audio/wav', 'audio/mp4', 'audio/ogg'];
-        if (allowed.includes(file.mimetype)) {
-            cb(null, true);
-        }
-        else {
-            cb(new Error('Invalid audio format. Allowed: mp3, wav, m4a, ogg'));
-        }
-    },
-});
 // All exercise routes require authentication
 router.use(auth_middleware_1.authenticate);
 /**
@@ -38,7 +18,8 @@ router.post('/submit', (0, auth_middleware_1.authorize)('STUDENT'), exercise_con
  * @desc    Submit speaking exercise with audio file upload
  * @access  Student
  */
-router.post('/submit/speaking', (0, auth_middleware_1.authorize)('STUDENT'), upload.single('audio'), // Field name: 'audio'
+router.post('/submit/speaking', (0, auth_middleware_1.authorize)('STUDENT'), upload_middleware_1.uploadAudio, // Multer middleware for audio files
+upload_middleware_1.handleMulterError, // Error handler
 exercise_controller_1.ExerciseController.submitSpeakingExercise);
 /**
  * @route   GET /api/exercises/me

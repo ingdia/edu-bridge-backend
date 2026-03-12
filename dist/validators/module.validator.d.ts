@@ -98,14 +98,14 @@ export declare const listModulesQuerySchema: z.ZodObject<{
     sortBy: "createdAt" | "title" | "difficulty" | "orderIndex";
     sortOrder: "asc" | "desc";
     type?: "LISTENING" | "SPEAKING" | "READING" | "WRITING" | "DIGITAL_LITERACY" | undefined;
-    search?: string | undefined;
     isActive?: boolean | undefined;
     difficulty?: "beginner" | "intermediate" | "advanced" | undefined;
+    search?: string | undefined;
 }, {
     type?: "LISTENING" | "SPEAKING" | "READING" | "WRITING" | "DIGITAL_LITERACY" | undefined;
-    search?: string | undefined;
     isActive?: boolean | undefined;
     difficulty?: "beginner" | "intermediate" | "advanced" | undefined;
+    search?: string | undefined;
     limit?: number | undefined;
     page?: number | undefined;
     sortBy?: "createdAt" | "title" | "difficulty" | "orderIndex" | undefined;

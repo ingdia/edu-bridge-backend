@@ -104,8 +104,8 @@ export const academicReportScanningService = {
   },
 
   // Save scanned report data to database
-  async saveScannedReport(scanResult: ScanResult) {
-    const student = await prisma.student.findUnique({
+  async saveScannedReport(scanResult: ScanResult, fileUrl: string, enteredBy: string) {
+    const student = await prisma.studentProfile.findUnique({
       where: { id: scanResult.studentId }
     });
 
@@ -113,24 +113,16 @@ export const academicReportScanningService = {
       throw new Error('Student not found');
     }
 
-    // Store in AcademicRecord
-    const academicRecord = await prisma.academicRecord.create({
+    // Store in AcademicReport
+    const academicRecord = await prisma.academicReport.create({
       data: {
         studentId: scanResult.studentId,
         term: scanResult.term,
         year: scanResult.year,
-        overallGrade: scanResult.overallAverage,
+        overallGrade: scanResult.overallAverage.toString(),
         subjects: scanResult.grades as any,
-        scannedAt: scanResult.extractedAt,
-        scanConfidence: scanResult.confidence
-      }
-    });
-
-    // Update student's academic performance
-    await prisma.student.update({
-      where: { id: scanResult.studentId },
-      data: {
-        academicPerformance: scanResult.overallAverage
+        fileUrl,
+        enteredBy
       }
     });
 
@@ -142,10 +134,12 @@ export const academicReportScanningService = {
     fileBuffer: Buffer,
     studentId: string,
     term: string,
-    year: number
+    year: number,
+    fileUrl: string,
+    enteredBy: string
   ) {
     const scanResult = await this.scanReport(fileBuffer, studentId, term, year);
-    return await this.saveScannedReport(scanResult);
+    return await this.saveScannedReport(scanResult, fileUrl, enteredBy);
   },
 
   // Manual correction of scanned data
@@ -164,14 +158,14 @@ export const academicReportScanningService = {
         (sum: number, g: ExtractedGrade) => sum + (g.score / g.maxScore) * 100,
         0
       ) / corrections.grades.length;
-      updates.overallGrade = overallAverage;
+      updates.overallGrade = overallAverage.toString();
     }
     
     if (corrections.overallGrade !== undefined) {
-      updates.overallGrade = corrections.overallGrade;
+      updates.overallGrade = corrections.overallGrade.toString();
     }
 
-    return await prisma.academicRecord.update({
+    return await prisma.academicReport.update({
       where: { id: recordId },
       data: updates
     });
@@ -179,10 +173,9 @@ export const academicReportScanningService = {
 
   // Get all scanned reports for a student
   async getStudentScannedReports(studentId: string) {
-    return await prisma.academicRecord.findMany({
+    return await prisma.academicReport.findMany({
       where: {
-        studentId,
-        scannedAt: { not: null }
+        studentId
       },
       orderBy: [
         { year: 'desc' },
@@ -193,22 +186,21 @@ export const academicReportScanningService = {
 
   // Get low confidence scans that need review
   async getLowConfidenceScans(threshold: number = 0.7) {
-    return await prisma.academicRecord.findMany({
-      where: {
-        scanConfidence: { lt: threshold },
-        scannedAt: { not: null }
-      },
+    return await prisma.academicReport.findMany({
       include: {
         student: {
           select: {
             id: true,
-            firstName: true,
-            lastName: true,
-            email: true
+            fullName: true,
+            user: {
+              select: {
+                email: true
+              }
+            }
           }
         }
       },
-      orderBy: { scanConfidence: 'asc' }
+      orderBy: { createdAt: 'desc' }
     });
   }
 };

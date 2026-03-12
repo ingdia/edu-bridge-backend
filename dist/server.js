@@ -8,17 +8,22 @@ require("dotenv/config");
 const app_1 = __importDefault(require("./app"));
 const database_1 = __importDefault(require("./config/database"));
 const env_1 = require("./config/env");
+const sessionReminder_job_1 = require("./jobs/sessionReminder.job");
 async function startServer() {
     try {
         // Connect to Database
         await database_1.default.$connect();
         console.log('✅ Database connected successfully');
+        // Start Cron Jobs
+        (0, sessionReminder_job_1.startAllCronJobs)();
+        console.log('✅ Cron jobs started successfully');
         // Start HTTP Server
         app_1.default.listen(env_1.env.PORT, () => {
             console.log(`🚀 EDU-Bridge Server running on port ${env_1.env.PORT}`);
             console.log(`📦 Environment: ${env_1.env.NODE_ENV}`);
             console.log(`🔒 Security: Helmet & CORS enabled`);
             console.log(`📝 Logging: Morgan enabled`);
+            console.log(`⏰ Cron Jobs: Session reminders & deadline alerts active`);
         });
     }
     catch (error) {

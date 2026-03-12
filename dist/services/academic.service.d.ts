@@ -1,6 +1,6 @@
 import { UploadAcademicReportInput, ManualEntryInput } from '../validators/academic.validator';
 export declare class AcademicReportService {
-    static uploadReport(data: UploadAcademicReportInput, adminId: string): Promise<{
+    static uploadReport(data: UploadAcademicReportInput, adminId: string, file?: Express.Multer.File): Promise<{
         data: {
             student: {
                 gradeLevel: string;
@@ -65,6 +65,9 @@ export declare class AcademicReportService {
             enteredBy: string;
             verifiedBy: string | null;
         }[];
+        message: string;
+    }>;
+    static deleteReport(reportId: string, adminId: string): Promise<{
         message: string;
     }>;
 }

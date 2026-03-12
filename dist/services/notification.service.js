@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.notificationService = exports.NotificationService = void 0;
 const client_1 = require("@prisma/client");
+const email_service_1 = require("./email.service");
 const prisma = new client_1.PrismaClient();
 class NotificationService {
     // Create a single notification
@@ -158,15 +159,29 @@ class NotificationService {
             },
         });
     }
-    // Send email notification (placeholder - integrate with actual email service)
+    // Send email notification
     async sendEmailNotification(notification) {
         try {
-            // TODO: Integrate with email service (SendGrid, AWS SES, etc.)
-            console.log('Email notification sent:', {
-                to: notification.recipient.user.email,
-                subject: notification.title,
-                body: notification.message,
+            const recipient = notification.recipient;
+            // Map notification type to email template
+            let template = 'notification-generic';
+            let subject = notification.title;
+            // Prepare email data based on notification type
+            const emailData = {
+                recipientName: recipient.fullName,
+                title: notification.title,
+                message: notification.message,
+                actionUrl: notification.actionUrl,
+                platformUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
+            };
+            // Send email using email service
+            await (0, email_service_1.sendEmail)({
+                to: recipient.user.email,
+                subject,
+                template: 'notification-generic', // We'll create a generic template
+                data: emailData,
             });
+            // Mark email as sent
             await prisma.notification.update({
                 where: { id: notification.id },
                 data: {
@@ -174,9 +189,14 @@ class NotificationService {
                     emailSentAt: new Date(),
                 },
             });
+            console.log('[EMAIL_NOTIFICATION_SENT]', {
+                to: recipient.user.email,
+                type: notification.type,
+            });
         }
         catch (error) {
-            console.error('Failed to send email notification:', error);
+            console.error('[EMAIL_NOTIFICATION_ERROR]', error);
+            // Don't throw - email failures shouldn't break notification creation
         }
     }
     // Create session reminder notification

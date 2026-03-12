@@ -1,23 +1,24 @@
 import { Request, Response, NextFunction } from 'express';
 import { auditLogService } from '../services/auditLog.service';
 import prisma from '../config/database';
+import { Role } from '@prisma/client';
 
 interface AuthRequest extends Request {
   user?: {
     userId: string;
     email: string;
-    role: string;
+    role: Role;
   };
 }
 
-export const requireRole = (...allowedRoles: string[]) => {
+export const requireRole = (...allowedRoles: Role[]) => {
   return async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       if (!req.user) {
         return res.status(401).json({ error: 'Authentication required' });
       }
 
-      if (!allowedRoles.includes(req.user.role)) {
+      if (!allowedRoles.includes(req.user.role as Role)) {
         await auditLogService.log({
           userId: req.user.userId,
           action: 'ACCESS_DENIED',
@@ -41,10 +42,10 @@ export const requireRole = (...allowedRoles: string[]) => {
   };
 };
 
-export const requireStudent = requireRole('STUDENT');
-export const requireMentor = requireRole('MENTOR', 'ADMIN');
-export const requireAdmin = requireRole('ADMIN');
-export const requireMentorOrAdmin = requireRole('MENTOR', 'ADMIN');
+export const requireStudent = requireRole('STUDENT' as Role);
+export const requireMentor = requireRole('MENTOR' as Role, 'ADMIN' as Role);
+export const requireAdmin = requireRole('ADMIN' as Role);
+export const requireMentorOrAdmin = requireRole('MENTOR' as Role, 'ADMIN' as Role);
 
 export const canAccessStudentData = async (
   req: AuthRequest,

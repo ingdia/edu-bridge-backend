@@ -1,0 +1,1 @@
+{"version":3,"file":"emailSimulation.controller.d.ts","sourceRoot":"","sources":["../../src/controllers/emailSimulation.controller.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,OAAO,EAAE,QAAQ,EAAE,MAAM,SAAS,CAAC;AAG5C,eAAO,MAAM,yBAAyB;kBAChB,OAAO,OAAO,QAAQ;mBAWrB,OAAO,OAAO,QAAQ;oBAYrB,OAAO,OAAO,QAAQ;uBAWnB,OAAO,OAAO,QAAQ;CAUhD,CAAC"}

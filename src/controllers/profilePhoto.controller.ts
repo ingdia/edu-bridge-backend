@@ -1,7 +1,15 @@
 // src/controllers/profilePhoto.controller.ts
 import type { Request, Response } from 'express';
 import { uploadProfilePhoto, deleteProfilePhoto } from '../services/profilePhoto.service';
-import type { AuthRequest } from '../middlewares/auth.middleware';
+import { Role } from '@prisma/client';
+
+interface AuthRequest extends Request {
+  user: {
+    userId: string;
+    email: string;
+    role: Role;
+  };
+}
 
 export const uploadProfilePhotoController = async (req: Request, res: Response) => {
   try {

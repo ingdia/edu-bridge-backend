@@ -1,0 +1,1 @@
+{"version":3,"file":"bulkOperations.controller.d.ts","sourceRoot":"","sources":["../../src/controllers/bulkOperations.controller.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,OAAO,EAAE,QAAQ,EAAE,MAAM,SAAS,CAAC;AAG5C,eAAO,MAAM,wBAAwB;wBACT,OAAO,OAAO,QAAQ;sBAYxB,OAAO,OAAO,QAAQ;+BAYb,OAAO,OAAO,QAAQ;uBAY9B,OAAO,OAAO,QAAQ;CAUhD,CAAC"}

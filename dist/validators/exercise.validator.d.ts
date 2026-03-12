@@ -245,13 +245,7 @@ export declare const exerciseSubmissionSchema: z.ZodDiscriminatedUnion<"exercise
 export type ExerciseSubmissionInput = z.infer<typeof exerciseSubmissionSchema>;
 export declare const getSubmissionsQuerySchema: z.ZodObject<{
     moduleId: z.ZodOptional<z.ZodString>;
-    exerciseType: z.ZodOptional<z.ZodNativeEnum<{
-        LISTENING: "LISTENING";
-        SPEAKING: "SPEAKING";
-        READING: "READING";
-        WRITING: "WRITING";
-        DIGITAL_LITERACY: "DIGITAL_LITERACY";
-    }>>;
+    exerciseType: z.ZodOptional<z.ZodEnum<["LISTENING", "SPEAKING", "READING", "WRITING", "DIGITAL_LITERACY"]>>;
     studentId: z.ZodOptional<z.ZodString>;
     status: z.ZodDefault<z.ZodEnum<["pending", "evaluated", "all"]>>;
     sortBy: z.ZodDefault<z.ZodEnum<["submittedAt", "score", "updatedAt"]>>;

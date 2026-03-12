@@ -72,11 +72,11 @@ export const emailSimulationService = {
           studentId,
           lessonType: 'email',
           lessonTitle: 'Email Practice',
-          practiceData: {
+          practiceData: JSON.parse(JSON.stringify({
             sent: [sentEmail],
             inbox: [],
             drafts: []
-          }
+          }))
         }
       });
     } else {
@@ -84,10 +84,10 @@ export const emailSimulationService = {
       await prisma.digitalLiteracyProgress.update({
         where: { id: progress.id },
         data: {
-          practiceData: {
+          practiceData: JSON.parse(JSON.stringify({
             ...currentData,
             sent: [...(currentData.sent || []), sentEmail]
-          }
+          }))
         }
       });
     }
@@ -124,10 +124,10 @@ export const emailSimulationService = {
         await prisma.digitalLiteracyProgress.update({
           where: { id: progress.id },
           data: {
-            practiceData: {
+            practiceData: JSON.parse(JSON.stringify({
               ...currentData,
               inbox: [...(currentData.inbox || []), replyEmail]
-            }
+            }))
           }
         });
       }
@@ -208,10 +208,10 @@ export const emailSimulationService = {
       await prisma.digitalLiteracyProgress.update({
         where: { id: progress.id },
         data: {
-          practiceData: {
+          practiceData: JSON.parse(JSON.stringify({
             ...currentData,
             inbox: updatedInbox
-          }
+          }))
         }
       });
     }

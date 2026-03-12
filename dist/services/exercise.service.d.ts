@@ -1,7 +1,6 @@
+import { Prisma } from '@prisma/client';
 import { ExerciseSubmissionInput, GetSubmissionsQuery, EvaluateSubmissionInput } from '../validators/exercise.validator';
 export declare class ExerciseService {
-    private static ensureUploadDir;
-    private static generateFilename;
     /**
      * Submit text-based exercise (LISTENING, READING, WRITING, DIGITAL_LITERACY)
      */
@@ -92,8 +91,8 @@ export declare class ExerciseService {
                 lastSyncedAt: Date | null;
                 submittedAt: Date;
                 exerciseType: import(".prisma/client").$Enums.ExerciseType;
-                submissionContent: import("@prisma/client/runtime/library").JsonValue;
-                rubricScores: import("@prisma/client/runtime/library").JsonValue | null;
+                submissionContent: Prisma.JsonValue;
+                rubricScores: Prisma.JsonValue | null;
                 isPassed: boolean | null;
                 evaluatedAt: Date | null;
                 evaluatedBy: string | null;

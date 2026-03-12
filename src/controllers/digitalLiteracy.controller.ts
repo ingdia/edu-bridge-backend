@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { digitalLiteracyService } from '../services/digitalLiteracy.service';
+import * as digitalLiteracyService from '../services/digitalLiteracy.service';
 import { logAudit } from '../utils/logger';
 
 export class DigitalLiteracyController {
@@ -13,7 +13,7 @@ export class DigitalLiteracyController {
 
       const { lessonTitle, lessonType } = req.body;
 
-      const progress = await digitalLiteracyService.startLesson(userId, lessonTitle, lessonType);
+      const progress = await digitalLiteracyService.startDigitalLiteracyLesson(userId, lessonTitle, lessonType);
 
       await logAudit(userId, 'DIGITAL_LITERACY_LESSON_STARTED', {
         entityType: 'DigitalLiteracyProgress',
@@ -42,17 +42,16 @@ export class DigitalLiteracyController {
 
       const { lessonTitle, lessonType, score, practiceData } = req.body;
 
-      const progress = await digitalLiteracyService.completeLesson(
+      const progress = await digitalLiteracyService.completeDigitalLiteracyLesson(
         userId,
         lessonTitle,
-        lessonType,
         score,
         practiceData
       );
 
       await logAudit(userId, 'DIGITAL_LITERACY_LESSON_COMPLETED', {
         entityType: 'DigitalLiteracyProgress',
-        entityId: progress.id,
+        entityId: progress.count.toString(),
         lessonTitle,
         lessonType,
         score,
@@ -82,7 +81,7 @@ export class DigitalLiteracyController {
       if (lessonType) filters.lessonType = lessonType as string;
       if (completed) filters.completed = completed === 'true';
 
-      const progress = await digitalLiteracyService.getStudentProgress(userId, filters);
+      const progress = await digitalLiteracyService.getDigitalLiteracyLessons(userId);
 
       res.status(200).json({
         success: true,
@@ -101,7 +100,7 @@ export class DigitalLiteracyController {
         return res.status(401).json({ success: false, message: 'Unauthorized' });
       }
 
-      const stats = await digitalLiteracyService.getStudentStats(userId);
+      const stats = await digitalLiteracyService.getDigitalLiteracyProgressSummary(userId);
 
       res.status(200).json({
         success: true,
@@ -121,7 +120,7 @@ export class DigitalLiteracyController {
       if (lessonType) filters.lessonType = lessonType as string;
       if (completed) filters.completed = completed === 'true';
 
-      const progress = await digitalLiteracyService.getAllStudentsProgress(filters);
+      const progress = await digitalLiteracyService.getDigitalLiteracyLessons('all');
 
       res.status(200).json({
         success: true,

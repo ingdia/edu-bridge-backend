@@ -9,11 +9,16 @@ class AcademicReportController {
         try {
             const validated = academic_validator_1.uploadAcademicReportSchema.parse(req.body);
             const adminId = req.user?.userId;
+            const file = req.file; // File from multer middleware
             if (!adminId) {
                 res.status(401).json({ success: false, message: 'Authentication required' });
                 return;
             }
-            const result = await academic_service_1.AcademicReportService.uploadReport(validated, adminId);
+            if (!file && !validated.fileUrl) {
+                res.status(400).json({ success: false, message: 'File or file URL is required' });
+                return;
+            }
+            const result = await academic_service_1.AcademicReportService.uploadReport(validated, adminId, file);
             res.status(201).json({ success: true, data: result.data, message: result.message });
         }
         catch (error) {
@@ -48,6 +53,25 @@ class AcademicReportController {
             const { studentId } = req.params;
             const result = await academic_service_1.AcademicReportService.getStudentReports(studentId);
             res.status(200).json({ success: true, data: result.data, message: result.message });
+        }
+        catch (error) {
+            if (error instanceof Error) {
+                res.status(400).json({ success: false, message: error.message });
+                return;
+            }
+            next(error);
+        }
+    }
+    static async deleteReport(req, res, next) {
+        try {
+            const { reportId } = req.params;
+            const adminId = req.user?.userId;
+            if (!adminId) {
+                res.status(401).json({ success: false, message: 'Authentication required' });
+                return;
+            }
+            const result = await academic_service_1.AcademicReportService.deleteReport(reportId, adminId);
+            res.status(200).json({ success: true, message: result.message });
         }
         catch (error) {
             if (error instanceof Error) {

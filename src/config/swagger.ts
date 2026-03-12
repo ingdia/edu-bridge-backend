@@ -1,5 +1,7 @@
-import swaggerJsdoc from 'swagger-jsdoc';
+// Swagger configuration disabled - install swagger-jsdoc if needed
+// import swaggerJsdoc from 'swagger-jsdoc';
 
+/*
 const options: swaggerJsdoc.Options = {
   definition: {
     openapi: '3.0.0',
@@ -170,5 +172,6 @@ const options: swaggerJsdoc.Options = {
   },
   apis: ['./src/routes/*.ts', './src/controllers/*.ts']
 };
+*/
 
-export const swaggerSpec = swaggerJsdoc(options);
+export const swaggerSpec = {}; // swaggerJsdoc(options);

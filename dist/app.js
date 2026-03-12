@@ -19,6 +19,22 @@ const exercise_routes_1 = __importDefault(require("./routes/exercise.routes"));
 const digitalLiteracy_routes_1 = __importDefault(require("./routes/digitalLiteracy.routes"));
 const notification_routes_1 = __importDefault(require("./routes/notification.routes"));
 const opportunity_routes_1 = __importDefault(require("./routes/opportunity.routes"));
+const message_routes_1 = __importDefault(require("./routes/message.routes"));
+const file_routes_1 = __importDefault(require("./routes/file.routes"));
+const analytics_routes_1 = __importDefault(require("./routes/analytics.routes"));
+const passwordReset_routes_1 = __importDefault(require("./routes/passwordReset.routes"));
+const profilePhoto_routes_1 = __importDefault(require("./routes/profilePhoto.routes"));
+const audio_routes_1 = __importDefault(require("./routes/audio.routes"));
+const auditLog_routes_1 = __importDefault(require("./routes/auditLog.routes"));
+const adminDashboard_routes_1 = __importDefault(require("./routes/adminDashboard.routes"));
+const sessionScheduling_routes_1 = __importDefault(require("./routes/sessionScheduling.routes"));
+const academicReportScanning_routes_1 = __importDefault(require("./routes/academicReportScanning.routes"));
+const bulkOperations_routes_1 = __importDefault(require("./routes/bulkOperations.routes"));
+const opportunityMatching_routes_1 = __importDefault(require("./routes/opportunityMatching.routes"));
+const emailSimulation_routes_1 = __importDefault(require("./routes/emailSimulation.routes"));
+const offlineSync_routes_1 = __importDefault(require("./routes/offlineSync.routes"));
+const health_routes_1 = __importDefault(require("./routes/health.routes"));
+const rateLimiter_middleware_1 = require("./middlewares/rateLimiter.middleware");
 const app = (0, express_1.default)();
 // ─────────────────────────────────────────────────────────────
 // SECURITY MIDDLEWARE (SRS NFR 1: Security)
@@ -41,6 +57,9 @@ app.use((0, morgan_1.default)('combined'));
 // 4. JSON Parser: Limit payload size to prevent DoS (SRS NFR 2: Performance)
 app.use(express_1.default.json({ limit: '10mb' }));
 app.use(express_1.default.urlencoded({ extended: true, limit: '10mb' }));
+// 5. Rate Limiting: Protect against brute force and DoS attacks
+app.use('/api/', rateLimiter_middleware_1.apiLimiter);
+app.use('/api/auth', rateLimiter_middleware_1.authLimiter);
 // ─────────────────────────────────────────────────────────────
 // ROUTES (Placeholder for Future Steps)
 // ─────────────────────────────────────────────────────────────
@@ -54,6 +73,8 @@ app.get('/health', (req, res) => {
         uptime: process.uptime(),
     });
 });
+// Detailed Health Monitoring
+app.use('/api/health', health_routes_1.default);
 // API Versioning Root (SRS 3.3: Software Interfaces)
 app.get('/api', (req, res) => {
     res.json({
@@ -73,6 +94,20 @@ app.use('/api/exercises', exercise_routes_1.default);
 app.use('/api/digital-literacy', digitalLiteracy_routes_1.default);
 app.use('/api/notifications', notification_routes_1.default);
 app.use('/api/opportunities', opportunity_routes_1.default);
+app.use('/api/messages', message_routes_1.default);
+app.use('/api/files', file_routes_1.default);
+app.use('/api/analytics', analytics_routes_1.default);
+app.use('/api/password-reset', passwordReset_routes_1.default);
+app.use('/api/profile-photo', profilePhoto_routes_1.default);
+app.use('/api/audio', audio_routes_1.default);
+app.use('/api/audit-logs', auditLog_routes_1.default);
+app.use('/api/admin/dashboard', adminDashboard_routes_1.default);
+app.use('/api/sessions', sessionScheduling_routes_1.default);
+app.use('/api/report-scanning', academicReportScanning_routes_1.default);
+app.use('/api/bulk', bulkOperations_routes_1.default);
+app.use('/api/matching', opportunityMatching_routes_1.default);
+app.use('/api/email-simulation', emailSimulation_routes_1.default);
+app.use('/api/offline-sync', offlineSync_routes_1.default);
 // ─────────────────────────────────────────────────────────────
 // GLOBAL ERROR HANDLER (SRS NFR 1: Security & Stability)
 // ─────────────────────────────────────────────────────────────
