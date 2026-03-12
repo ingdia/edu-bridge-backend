@@ -259,7 +259,7 @@ export declare const getSubmissionsQuerySchema: z.ZodObject<{
     limit: z.ZodDefault<z.ZodNumber>;
     page: z.ZodDefault<z.ZodNumber>;
 }, "strip", z.ZodTypeAny, {
-    status: "all" | "pending" | "evaluated";
+    status: "pending" | "evaluated" | "all";
     limit: number;
     page: number;
     sortBy: "updatedAt" | "score" | "submittedAt";
@@ -268,7 +268,7 @@ export declare const getSubmissionsQuerySchema: z.ZodObject<{
     moduleId?: string | undefined;
     exerciseType?: "LISTENING" | "SPEAKING" | "READING" | "WRITING" | "DIGITAL_LITERACY" | undefined;
 }, {
-    status?: "all" | "pending" | "evaluated" | undefined;
+    status?: "pending" | "evaluated" | "all" | undefined;
     studentId?: string | undefined;
     moduleId?: string | undefined;
     exerciseType?: "LISTENING" | "SPEAKING" | "READING" | "WRITING" | "DIGITAL_LITERACY" | undefined;

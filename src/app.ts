@@ -14,6 +14,7 @@ import exerciseRoutes from './routes/exercise.routes';
 import digitalLiteracyRoutes from './routes/digitalLiteracy.routes';
 import notificationRoutes from './routes/notification.routes';
 import opportunityRoutes from './routes/opportunity.routes';
+import messageRoutes from './routes/message.routes';
 
 const app: Application = express();
 
@@ -80,6 +81,7 @@ app.use('/api/exercises', exerciseRoutes);
 app.use('/api/digital-literacy', digitalLiteracyRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/opportunities', opportunityRoutes);
+app.use('/api/messages', messageRoutes);
 // ─────────────────────────────────────────────────────────────
 // GLOBAL ERROR HANDLER (SRS NFR 1: Security & Stability)
 // ─────────────────────────────────────────────────────────────

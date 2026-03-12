@@ -357,6 +357,46 @@ model MentorshipSession {
 }
 
 // ─────────────────────────────────────────────────────────────
+// MESSAGING SYSTEM (SRS FR 7.1)
+// ─────────────────────────────────────────────────────────────
+
+model Message {
+  id String @id @default(uuid())
+
+  // Sender (can be student or mentor)
+  senderUserId String
+  senderRole   Role
+
+  // Recipient (can be student or mentor)
+  recipientUserId String
+  recipientRole   Role
+
+  // Message content
+  subject String?
+  content String @db.Text
+
+  // Attachments (optional - for future file sharing)
+  attachments Json?
+
+  // Message status
+  isRead    Boolean   @default(false)
+  readAt    DateTime?
+  isDeleted Boolean   @default(false)
+
+  // Thread support (optional - for grouping conversations)
+  threadId String?
+  replyTo  String? // ID of message being replied to
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([senderUserId, createdAt])
+  @@index([recipientUserId, isRead])
+  @@index([threadId])
+  @@index([senderUserId, recipientUserId])
+}
+
+// ─────────────────────────────────────────────────────────────
 // INCREMENT 2: CAREER GUIDANCE (SRS FR 8)
 // ─────────────────────────────────────────────────────────────
 

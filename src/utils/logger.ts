@@ -42,10 +42,6 @@ export type AuditAction =
   | 'SPEAKING_EXERCISE_SUBMITTED'
   | 'MENTOR_SUBMISSIONS_VIEWED'
   | 'SUBMISSION_EVALUATED'
-  | 'EXERCISE_SUBMITTED'
-  | 'SPEAKING_EXERCISE_SUBMITTED'
-  | 'MENTOR_SUBMISSIONS_VIEWED'
-  | 'SUBMISSION_EVALUATED'
 
   // ─────────────────────────────────────────────────────────────
   // ACADEMIC REPORTS (FR 5)
@@ -64,6 +60,9 @@ export type AuditAction =
   | 'SESSION_RESCHEDULE'
   | 'SESSION_CANCEL'
   | 'MENTOR_MESSAGE_SEND'
+  | 'MESSAGE_SEND'
+  | 'MESSAGE_READ'
+  | 'MESSAGE_DELETE'
 
   // ─────────────────────────────────────────────────────────────
   // CAREER GUIDANCE (FR 8)
@@ -77,6 +76,7 @@ export type AuditAction =
   | 'OPPORTUNITY_CREATED'
   | 'OPPORTUNITY_UPDATED'
   | 'OPPORTUNITY_DELETED'
+
 
   // ─────────────────────────────────────────────────────────────
   // ADMIN MODULE MANAGEMENT

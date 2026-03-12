@@ -15,6 +15,10 @@ const progress_routes_1 = __importDefault(require("./routes/progress.routes"));
 const academic_routes_1 = __importDefault(require("./routes/academic.routes"));
 const mentorship_routes_1 = __importDefault(require("./routes/mentorship.routes"));
 const career_routes_1 = __importDefault(require("./routes/career.routes"));
+const exercise_routes_1 = __importDefault(require("./routes/exercise.routes"));
+const digitalLiteracy_routes_1 = __importDefault(require("./routes/digitalLiteracy.routes"));
+const notification_routes_1 = __importDefault(require("./routes/notification.routes"));
+const opportunity_routes_1 = __importDefault(require("./routes/opportunity.routes"));
 const app = (0, express_1.default)();
 // ─────────────────────────────────────────────────────────────
 // SECURITY MIDDLEWARE (SRS NFR 1: Security)
@@ -65,6 +69,10 @@ app.use('/api/progress', progress_routes_1.default);
 app.use('/api/academic', academic_routes_1.default);
 app.use('/api/mentorship', mentorship_routes_1.default);
 app.use('/api/career', career_routes_1.default);
+app.use('/api/exercises', exercise_routes_1.default);
+app.use('/api/digital-literacy', digitalLiteracy_routes_1.default);
+app.use('/api/notifications', notification_routes_1.default);
+app.use('/api/opportunities', opportunity_routes_1.default);
 // ─────────────────────────────────────────────────────────────
 // GLOBAL ERROR HANDLER (SRS NFR 1: Security & Stability)
 // ─────────────────────────────────────────────────────────────
