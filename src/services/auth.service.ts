@@ -3,6 +3,8 @@ import prisma from '../config/database';
 import { hashPassword, comparePassword } from '../utils/password';
 import { generateAccessToken, generateRefreshToken, type Role } from '../utils/jwt';
 import { logAudit } from '../utils/logger';
+import { sendWelcomeEmail } from './email.service';
+import { env } from '../config/env';
 import type { RegisterInput, LoginInput } from '../validators/auth.validator';
 
 // ─────────────────────────────────────────────────────────────
@@ -23,7 +25,7 @@ export const registerUser = async (
   data: RegisterInput,
   ipAddress?: string
 ): Promise<RegisterOutput> => {
-  const { email, password, role, fullName, nationalId, dateOfBirth,gradeLevel, guardianName, guardianContact } = data;
+  const { email, password, role, fullName, nationalId, dateOfBirth, gradeLevel, guardianName, guardianContact } = data;
 
   // FR 1.1: Check if email already exists
   const existingUser = await prisma.user.findUnique({
@@ -53,7 +55,7 @@ export const registerUser = async (
         userId: user.id,
         fullName,
         dateOfBirth: new Date(dateOfBirth),
-         gradeLevel: gradeLevel || 'Senior Four',
+        gradeLevel: gradeLevel || 'Senior Four',
         nationalId,
         guardianName: guardianName || null,
         guardianContact: guardianContact || null,
@@ -86,6 +88,18 @@ export const registerUser = async (
 
   // NFR 5: Audit logging
   await logAudit(user.id, 'USER_REGISTER', { email, role }, ipAddress);
+
+  // FR 9: Send welcome email (non-blocking — failure won't break registration)
+  const displayName = fullName || email.split('@')[0];
+  sendWelcomeEmail(email, displayName, {
+    email,
+    role,
+    schoolName: 'GS Ruyenzi',
+    isStudent: role === 'STUDENT',
+    isMentor: role === 'MENTOR',
+    isAdmin: role === 'ADMIN',
+    platformUrl: env.FRONTEND_URL,
+  });
 
   return {
     user: {
