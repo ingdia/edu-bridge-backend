@@ -4,6 +4,19 @@ import { AcademicReportService } from '../services/academic.service';
 import { uploadAcademicReportSchema, manualEntrySchema } from '../validators/academic.validator';
 
 export class AcademicReportController {
+  static async getAllReports(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { term, year } = req.query;
+      const result = await AcademicReportService.getAllReports({
+        term: term as string | undefined,
+        year: year ? parseInt(year as string) : undefined,
+      });
+      res.status(200).json({ success: true, data: result.data });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   static async uploadReport(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const validated = uploadAcademicReportSchema.parse(req.body);

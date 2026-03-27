@@ -4,7 +4,7 @@
   "description": "EDU-Bridge: Empowering Rwandan public day school students with English, digital literacy, and career guidance",
   "main": "dist/server.js",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only --exit-child src/server.ts",
+    "dev": "set PORT=5000 && ts-node-dev --respawn --transpile-only --exit-child src/server.ts",
     "build": "npx prisma generate && tsc",
     "start": "node dist/server.js",
     "prisma:generate": "prisma generate",
@@ -16,7 +16,8 @@
     "lint:check": "eslint src --ext .ts",
     "test": "echo \"No tests yet\" && exit 0",
     "test:watch": "echo \"No tests yet\" && exit 0",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "seed": "ts-node --transpile-only prisma/seed.ts"
   },
   "repository": {
     "type": "git",
@@ -35,6 +36,9 @@
   ],
   "author": "Diane INGABIRE",
   "license": "ISC",
+  "prisma": {
+    "seed": "ts-node --transpile-only prisma/seed.ts"
+  },
   "type": "commonjs",
   "bugs": {
     "url": "https://github.com/ingdia/edu-bridge-backend/issues"

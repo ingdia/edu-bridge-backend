@@ -197,5 +197,73 @@ export const adminDashboardController = {
     } catch (error: any) {
       res.status(500).json({ success: false, error: error.message });
     }
-  }
+  },
+
+  async getAllUsers(req: Request, res: Response) {
+    try {
+      const { role, search } = req.query;
+
+      const where: any = {};
+      if (role && role !== 'ALL') where.role = role;
+      if (search) {
+        where.OR = [
+          { email: { contains: search as string, mode: 'insensitive' } },
+          { studentProfile: { fullName: { contains: search as string, mode: 'insensitive' } } },
+          { mentorProfile: { user: { email: { contains: search as string, mode: 'insensitive' } } } },
+        ];
+      }
+
+      const users = await prisma.user.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          email: true,
+          role: true,
+          isActive: true,
+          createdAt: true,
+          lastLogin: true,
+          studentProfile: { select: { id: true, fullName: true, gradeLevel: true, schoolName: true } },
+          mentorProfile: { select: { expertise: true } },
+          adminProfile: { select: { permissions: true } },
+        },
+      });
+
+      const mapped = users.map((u) => ({
+        id: u.id,
+        email: u.email,
+        role: u.role,
+        isActive: u.isActive,
+        createdAt: u.createdAt,
+        lastLogin: u.lastLogin,
+        fullName: u.studentProfile?.fullName || null,
+        studentProfileId: u.studentProfile?.id || null,
+        gradeLevel: u.studentProfile?.gradeLevel || null,
+        schoolName: u.studentProfile?.schoolName || null,
+        expertise: u.mentorProfile?.expertise || null,
+      }));
+
+      res.json({ success: true, data: mapped, count: mapped.length });
+    } catch (error: any) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  },
+
+  async toggleUserStatus(req: Request, res: Response) {
+    try {
+      const { userId } = req.params;
+      const user = await prisma.user.findUnique({ where: { id: userId } });
+      if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+      const updated = await prisma.user.update({
+        where: { id: userId },
+        data: { isActive: !user.isActive },
+        select: { id: true, isActive: true },
+      });
+
+      res.json({ success: true, data: updated });
+    } catch (error: any) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  },
 };

@@ -59,6 +59,22 @@ export class AcademicReportService {
     return { data: report, message: 'Academic report entered successfully' };
   }
 
+  static async getAllReports(filters?: { term?: string; year?: number }) {
+    const where: any = {};
+    if (filters?.term) where.term = filters.term;
+    if (filters?.year) where.year = filters.year;
+
+    const reports = await prisma.academicReport.findMany({
+      where,
+      orderBy: [{ year: 'desc' }, { term: 'desc' }, { createdAt: 'desc' }],
+      include: {
+        student: { select: { fullName: true, gradeLevel: true } },
+      },
+    });
+
+    return { data: reports, message: 'Reports retrieved successfully' };
+  }
+
   static async getStudentReports(studentId: string) {
     const reports = await prisma.academicReport.findMany({
       where: { studentId },

@@ -3,9 +3,10 @@ import prisma from '../config/database';
 import { hashPassword, comparePassword } from '../utils/password';
 import { generateAccessToken, generateRefreshToken, type Role } from '../utils/jwt';
 import { logAudit } from '../utils/logger';
-import { sendWelcomeEmail } from './email.service';
+import { sendWelcomeEmail, sendEmail } from './email.service';
 import { env } from '../config/env';
 import type { RegisterInput, LoginInput } from '../validators/auth.validator';
+import crypto from 'crypto';
 
 // ─────────────────────────────────────────────────────────────
 // REGISTER SERVICE (SRS FR 1, FR 2)
@@ -17,8 +18,7 @@ export interface RegisterOutput {
     email: string;
     role: Role;
   };
-  accessToken: string;
-  refreshToken: string;
+  message: string;
 }
 
 export const registerUser = async (
@@ -39,12 +39,19 @@ export const registerUser = async (
   // FR 1.2: Hash password securely (NFR 1)
   const hashedPassword = await hashPassword(password);
 
+  // Generate email verification token
+  const verificationToken = crypto.randomBytes(32).toString('hex');
+  const verificationTokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
   // Create user with role (SRS 2.3: User Classes)
   const user = await prisma.user.create({
     data: {
       email,
       password: hashedPassword,
       role: role as Role,
+      emailVerified: false,
+      verificationToken,
+      verificationTokenExpiresAt,
     },
   });
 
@@ -63,42 +70,17 @@ export const registerUser = async (
     });
   }
 
-  // Generate JWT tokens
-  const accessToken = generateAccessToken({
-    userId: user.id,
-    email: user.email,
-    role: user.role as Role,
-  });
-
-  const refreshToken = generateRefreshToken({
-    userId: user.id,
-    email: user.email,
-    role: user.role as Role,
-  });
-
-  // Store refresh token in database (for revocation support)
-  await prisma.refreshToken.create({
-    data: {
-      userId: user.id,
-      token: refreshToken,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-      ipAddress: ipAddress || null,
-    },
-  });
-
   // NFR 5: Audit logging
   await logAudit(user.id, 'USER_REGISTER', { email, role }, ipAddress);
 
-  // FR 9: Send welcome email (non-blocking — failure won't break registration)
+  // Send verification email (non-blocking)
   const displayName = fullName || email.split('@')[0];
-  sendWelcomeEmail(email, displayName, {
-    email,
-    role,
-    schoolName: 'GS Ruyenzi',
-    isStudent: role === 'STUDENT',
-    isMentor: role === 'MENTOR',
-    isAdmin: role === 'ADMIN',
-    platformUrl: env.FRONTEND_URL,
+  const verificationUrl = `${env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+  sendEmail({
+    to: email,
+    subject: '✉️ Verify your EDU-Bridge email',
+    template: 'verify-email',
+    data: { userName: displayName, verificationUrl },
   });
 
   return {
@@ -107,8 +89,7 @@ export const registerUser = async (
       email: user.email,
       role: user.role as Role,
     },
-    accessToken,
-    refreshToken,
+    message: 'Registration successful. Please check your email to verify your account.',
   };
 };
 
@@ -159,6 +140,11 @@ export const loginUser = async (
   // Check if account is active
   if (!user.isActive) {
     throw new Error('Account is deactivated. Contact administrator.');
+  }
+
+  // Block login if email not verified
+  if (!user.emailVerified) {
+    throw new Error('Please verify your email before logging in. Check your inbox.');
   }
 
   // Generate JWT tokens

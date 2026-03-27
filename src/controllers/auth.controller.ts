@@ -1,11 +1,12 @@
 // src/controllers/auth.controller.ts
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken'; // ← ADD THIS IMPORT
+import jwt from 'jsonwebtoken';
 import { registerUser, loginUser, logoutUser } from '../services/auth.service';
 import { validateRegister, validateLogin, validateRefreshToken } from '../validators/auth.validator';
 import { verifyToken } from '../utils/jwt';
 import prisma from '../config/database';
-import { env } from '../config/env'; // ← Also import env for JWT_SECRET
+import { env } from '../config/env';
+import { sendWelcomeEmail } from '../services/email.service';
 
 // ─────────────────────────────────────────────────────────────
 // REGISTER CONTROLLER (SRS FR 1, FR 2)
@@ -23,8 +24,8 @@ export const register = async (
 
     res.status(201).json({
       success: true,
-      message: 'Registration successful',
-      data: result,
+      message: result.message,
+      data: { user: result.user },
     });
   } catch (error) {
     next(error);
@@ -193,6 +194,63 @@ export const getCurrentUser = async (
       success: true,
       data: { user },
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ─────────────────────────────────────────────────────────────
+// VERIFY EMAIL CONTROLLER
+// ─────────────────────────────────────────────────────────────
+
+export const verifyEmail = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { token } = req.query as { token: string };
+
+    if (!token) {
+      res.status(400).json({ success: false, message: 'Verification token is required' });
+      return;
+    }
+
+    const user = await prisma.user.findFirst({
+      where: {
+        verificationToken: token,
+        emailVerified: false,
+        verificationTokenExpiresAt: { gt: new Date() },
+      },
+    });
+
+    if (!user) {
+      res.status(400).json({ success: false, message: 'Invalid or expired verification token' });
+      return;
+    }
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        emailVerified: true,
+        verificationToken: null,
+        verificationTokenExpiresAt: null,
+      },
+    });
+
+    // Send welcome email after verification
+    const displayName = user.email.split('@')[0];
+    sendWelcomeEmail(user.email, displayName, {
+      email: user.email,
+      role: user.role,
+      schoolName: 'GS Ruyenzi',
+      isStudent: user.role === 'STUDENT',
+      isMentor: user.role === 'MENTOR',
+      isAdmin: user.role === 'ADMIN',
+      platformUrl: env.FRONTEND_URL,
+    });
+
+    res.status(200).json({ success: true, message: 'Email verified successfully. You can now log in.' });
   } catch (error) {
     next(error);
   }

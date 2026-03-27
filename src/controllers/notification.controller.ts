@@ -1,8 +1,32 @@
 import { Request, Response } from 'express';
+import prisma from '../config/database';
 import { notificationService } from '../services/notification.service';
 import { logAudit } from '../utils/logger';
 
 export class NotificationController {
+  // Get all notifications (admin)
+  async getAllNotifications(req: Request, res: Response) {
+    try {
+      const { type, status } = req.query;
+      const where: any = {};
+      if (type) where.type = type;
+      if (status) where.status = status;
+
+      const notifications = await prisma.notification.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        take: 100,
+        include: {
+          recipient: { select: { fullName: true } },
+        },
+      });
+
+      res.status(200).json({ success: true, data: notifications, total: notifications.length });
+    } catch (error: any) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
   // Create a notification (mentor/admin only)
   async createNotification(req: Request, res: Response) {
     try {

@@ -1,0 +1,19 @@
+<!-- src/templates/email/verify-email.html -->
+<h2>✉️ Verify Your Email Address</h2>
+
+<p>Hello <strong>{{userName}}</strong>,</p>
+
+<p>Thank you for registering on <strong>EDU-Bridge</strong>! Please verify your email address to activate your account.</p>
+
+<div class="info-box">
+  <p>This verification link will expire in <strong>24 hours</strong>.</p>
+</div>
+
+<a href="{{verificationUrl}}" class="button">Verify My Email</a>
+
+<p>If the button doesn't work, copy and paste this link into your browser:</p>
+<p style="word-break: break-all; color: #059669;">{{verificationUrl}}</p>
+
+<p>If you did not create an account, you can safely ignore this email.</p>
+
+<p>Best regards,<br><strong>EDU-Bridge Team</strong></p>

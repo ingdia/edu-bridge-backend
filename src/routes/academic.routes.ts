@@ -7,6 +7,9 @@ const router = Router();
 
 router.use(authenticate);
 
+// Get all reports (admin)
+router.get('/', authorize('ADMIN'), AcademicReportController.getAllReports);
+
 // Upload academic report with file
 router.post(
   '/upload',

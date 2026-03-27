@@ -70,6 +70,13 @@ export class NotificationService {
     return notifications;
   }
 
+  // Resolve User.id → StudentProfile.id
+  private async resolveStudentProfileId(userId: string): Promise<string> {
+    const profile = await prisma.studentProfile.findUnique({ where: { userId }, select: { id: true } });
+    if (!profile) throw new Error('Student profile not found');
+    return profile.id;
+  }
+
   // Get notifications for a student
   async getStudentNotifications(
     studentId: string,
@@ -79,7 +86,8 @@ export class NotificationService {
       limit?: number;
     }
   ) {
-    const where: any = { recipientId: studentId };
+    const profileId = await this.resolveStudentProfileId(studentId);
+    const where: any = { recipientId: profileId };
 
     if (filters?.type) {
       where.type = filters.type;
@@ -120,10 +128,11 @@ export class NotificationService {
 
   // Mark notification as read
   async markAsRead(notificationId: string, studentId: string) {
+    const profileId = await this.resolveStudentProfileId(studentId);
     const notification = await prisma.notification.findFirst({
       where: {
         id: notificationId,
-        recipientId: studentId,
+        recipientId: profileId,
       },
     });
 
@@ -142,9 +151,10 @@ export class NotificationService {
 
   // Mark all notifications as read
   async markAllAsRead(studentId: string) {
+    const profileId = await this.resolveStudentProfileId(studentId);
     return await prisma.notification.updateMany({
       where: {
-        recipientId: studentId,
+        recipientId: profileId,
         status: 'UNREAD',
       },
       data: {
@@ -160,10 +170,11 @@ export class NotificationService {
     studentId: string,
     status: NotificationStatus
   ) {
+    const profileId = await this.resolveStudentProfileId(studentId);
     const notification = await prisma.notification.findFirst({
       where: {
         id: notificationId,
-        recipientId: studentId,
+        recipientId: profileId,
       },
     });
 
@@ -182,10 +193,11 @@ export class NotificationService {
 
   // Delete notification
   async deleteNotification(notificationId: string, studentId: string) {
+    const profileId = await this.resolveStudentProfileId(studentId);
     const notification = await prisma.notification.findFirst({
       where: {
         id: notificationId,
-        recipientId: studentId,
+        recipientId: profileId,
       },
     });
 
@@ -200,9 +212,11 @@ export class NotificationService {
 
   // Get unread count
   async getUnreadCount(studentId: string) {
+    const profileId = await this.resolveStudentProfileId(studentId).catch(() => null);
+    if (!profileId) return 0;
     return await prisma.notification.count({
       where: {
-        recipientId: studentId,
+        recipientId: profileId,
         status: 'UNREAD',
       },
     });

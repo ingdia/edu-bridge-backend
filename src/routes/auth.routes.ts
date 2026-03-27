@@ -1,6 +1,6 @@
 // src/routes/auth.routes.ts
 import { Router } from 'express';
-import { register, login, logout, refreshToken, getCurrentUser } from '../controllers/auth.controller';
+import { register, login, logout, refreshToken, getCurrentUser, verifyEmail } from '../controllers/auth.controller';
 import { authenticate, authorize } from '../middlewares/auth.middleware';
 
 const router = Router();
@@ -32,6 +32,14 @@ router.post('/login', login);
  * @body    refreshToken
  */
 router.post('/refresh-token', refreshToken);
+
+/**
+ * @route   GET /api/auth/verify-email
+ * @desc    Verify user email with token
+ * @access  Public
+ * @query   token
+ */
+router.get('/verify-email', verifyEmail);
 
 // ─────────────────────────────────────────────────────────────
 // PROTECTED ROUTES (Authentication required)

@@ -11,11 +11,11 @@ import {
 
 const router = Router();
 
-// Student routes
+// Student + Mentor routes
 router.get(
   '/my-notifications',
   authenticate,
-  authorize('STUDENT'),
+  authorize('STUDENT', 'MENTOR'),
   validate(getNotificationsQuerySchema),
   notificationController.getMyNotifications.bind(notificationController)
 );
@@ -23,28 +23,28 @@ router.get(
 router.get(
   '/unread-count',
   authenticate,
-  authorize('STUDENT'),
+  authorize('STUDENT', 'MENTOR'),
   notificationController.getUnreadCount.bind(notificationController)
 );
 
 router.patch(
   '/:id/read',
   authenticate,
-  authorize('STUDENT'),
+  authorize('STUDENT', 'MENTOR'),
   notificationController.markAsRead.bind(notificationController)
 );
 
 router.patch(
   '/mark-all-read',
   authenticate,
-  authorize('STUDENT'),
+  authorize('STUDENT', 'MENTOR'),
   notificationController.markAllAsRead.bind(notificationController)
 );
 
 router.patch(
   '/:id/status',
   authenticate,
-  authorize('STUDENT'),
+  authorize('STUDENT', 'MENTOR'),
   validate(updateNotificationSchema),
   notificationController.updateNotificationStatus.bind(notificationController)
 );
@@ -52,8 +52,16 @@ router.patch(
 router.delete(
   '/:id',
   authenticate,
-  authorize('STUDENT'),
+  authorize('STUDENT', 'MENTOR'),
   notificationController.deleteNotification.bind(notificationController)
+);
+
+// Admin routes
+router.get(
+  '/all',
+  authenticate,
+  authorize('ADMIN'),
+  notificationController.getAllNotifications.bind(notificationController)
 );
 
 // Mentor/Admin routes

@@ -14,5 +14,7 @@ router.get('/progress/stats', adminDashboardController.getProgressStats);
 router.get('/activity', adminDashboardController.getSystemActivity);
 router.get('/top-performers', adminDashboardController.getTopPerformers);
 router.get('/health', adminDashboardController.getSystemHealth);
+router.get('/users', adminDashboardController.getAllUsers);
+router.patch('/users/:userId/toggle-status', adminDashboardController.toggleUserStatus);
 
 export default router;
