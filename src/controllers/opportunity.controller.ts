@@ -68,6 +68,9 @@ export class OpportunityController {
         data: opportunities,
       });
     } catch (error: any) {
+      if (error.message === 'Student profile not found') {
+        return res.status(200).json({ success: true, data: [] });
+      }
       res.status(500).json({ success: false, message: error.message });
     }
   }

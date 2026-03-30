@@ -162,34 +162,76 @@ export class ProgressService {
     mentorUserId: string,
     filters: MentorDashboardFilters
   ): Promise<{ data: { students: any[]; summary: any }; message: string }> {
-    // Get mentor profile first
-    const mentorProfile = await prisma.mentorProfile.findUnique({
+    // Get mentor profile, auto-create if missing
+    let mentorProfile = await prisma.mentorProfile.findUnique({
       where: { userId: mentorUserId },
-      select: { id: true },
+      select: { id: true, schoolId: true },
     });
     if (!mentorProfile) {
-      throw new Error('Mentor profile not found');
+      mentorProfile = await prisma.mentorProfile.create({
+        data: { userId: mentorUserId, expertise: [] },
+        select: { id: true, schoolId: true },
+      });
     }
 
-    // Get students assigned to this mentor via active sessions
-    const mentorshipSessions = await prisma.mentorshipSession.findMany({
-      where: { 
-        mentorId: mentorProfile.id, 
-        status: { in: [SessionStatus.SCHEDULED, SessionStatus.COMPLETED] } 
-      },
-      select: { studentId: true },
-    });
+    // Find students: prefer school-based assignment, fall back to session-based
+    let studentProfiles: any[] = [];
 
-    const studentIds = mentorshipSessions.map((s) => s.studentId);
-    if (studentIds.length === 0) {
-      return { data: { students: [], summary: {} }, message: 'No assigned students found' };
+    if (mentorProfile.schoolId) {
+      // Get the school name for fallback matching
+      const school = await prisma.school.findUnique({
+        where: { id: mentorProfile.schoolId },
+        select: { name: true },
+      });
+
+      // Match students by schoolId OR schoolName (covers existing students)
+      studentProfiles = await prisma.studentProfile.findMany({
+        where: {
+          OR: [
+            { schoolId: mentorProfile.schoolId },
+            ...(school ? [{ schoolName: school.name }] : []),
+          ],
+        },
+        select: {
+          id: true,
+          fullName: true,
+          gradeLevel: true,
+          schoolName: true,
+          user: { select: { id: true, email: true } },
+        },
+      });
+    } else {
+      // Session-based fallback
+      const sessions = await prisma.mentorshipSession.findMany({
+        where: {
+          mentorId: mentorProfile.id,
+          status: { in: [SessionStatus.SCHEDULED, SessionStatus.COMPLETED] },
+        },
+        select: { studentId: true },
+      });
+      const ids = [...new Set(sessions.map((s) => s.studentId))];
+      if (ids.length > 0) {
+        studentProfiles = await prisma.studentProfile.findMany({
+          where: { id: { in: ids } },
+          select: {
+            id: true,
+            fullName: true,
+            gradeLevel: true,
+            schoolName: true,
+            user: { select: { id: true, email: true } },
+          },
+        });
+      }
     }
 
-    // Build query filters
-    const where: any = {
-      studentId: { in: studentIds },
-    };
-    if (filters.studentId) where.studentId = filters.studentId;
+    if (studentProfiles.length === 0) {
+      return { data: { students: [], summary: { totalStudents: 0, totalCompletedModules: 0, avgCompletionRate: 0 } }, message: 'No students found' };
+    }
+
+    const studentIds = studentProfiles.map((s) => s.id);
+
+    // Get progress for all these students
+    const where: any = { studentId: { in: studentIds } };
     if (filters.moduleId) where.moduleId = filters.moduleId;
     if (filters.isCompleted !== undefined) {
       where.completedAt = filters.isCompleted ? { not: null } : null;
@@ -199,95 +241,65 @@ export class ProgressService {
       where,
       include: {
         student: {
-          select: {
-            id: true,
-            fullName: true,
-            user: {
-              select: {
-                id: true,
-                email: true,
-              },
-            },
-          },
+          select: { id: true, fullName: true, user: { select: { id: true, email: true } } },
         },
-        module: {
-          select: {
-            id: true,
-            title: true,
-            type: true,
-          },
-        },
+        module: { select: { id: true, title: true, type: true } },
       },
       orderBy: { [filters.sortBy]: filters.sortOrder },
     });
 
-    // Group by student for dashboard view
-    const studentsMap = new Map();
+    // Build student map from profiles (include students with no progress yet)
+    const studentsMap = new Map<string, any>();
+    for (const sp of studentProfiles) {
+      studentsMap.set(sp.id, {
+        student: sp,
+        progress: [],
+        stats: { completed: 0, inProgress: 0, avgScore: null, totalTime: 0 },
+      });
+    }
+
     for (const p of progress) {
-      if (!studentsMap.has(p.studentId)) {
-        studentsMap.set(p.studentId, {
-          student: p.student,
-          progress: [],
-          stats: {
-            completed: 0,
-            inProgress: 0,
-            avgScore: 0,
-            totalTime: 0,
-          },
-        });
-      }
-      const studentData = studentsMap.get(p.studentId);
+      const entry = studentsMap.get(p.studentId);
+      if (!entry) continue;
       const status = computeStatus(p.completedAt);
-      studentData.progress.push({ ...p, status }); // Add computed status
-      if (status === 'completed') studentData.stats.completed++;
-      else studentData.stats.inProgress++;
+      entry.progress.push({ ...p, status });
+      if (status === 'completed') entry.stats.completed++;
+      else entry.stats.inProgress++;
       if (p.score !== null) {
-        const count = studentData.progress.filter((x: any) => x.score !== null).length;
-        const sum = studentData.progress.reduce((acc: number, x: any) => 
-          acc + (x.score !== null ? x.score : 0), 0);
-        studentData.stats.avgScore = count > 0 ? parseFloat((sum / count).toFixed(1)) : null;
+        const scored = entry.progress.filter((x: any) => x.score !== null);
+        entry.stats.avgScore = parseFloat(
+          (scored.reduce((a: number, x: any) => a + x.score, 0) / scored.length).toFixed(1)
+        );
       }
-      studentData.stats.totalTime += p.timeSpent ?? 0;
+      entry.stats.totalTime += p.timeSpent ?? 0;
     }
 
     const students = Array.from(studentsMap.values()).map((s: any) => ({
       ...s,
       stats: {
         ...s.stats,
-        completionRate: s.stats.completed + s.stats.inProgress > 0
-          ? Math.round((s.stats.completed / (s.stats.completed + s.stats.inProgress)) * 100)
-          : 0,
+        completionRate:
+          s.stats.completed + s.stats.inProgress > 0
+            ? Math.round((s.stats.completed / (s.stats.completed + s.stats.inProgress)) * 100)
+            : 0,
       },
     }));
 
-    // Overall summary
-    const totalRecords = students.reduce((acc: number, s: any) => 
-      acc + s.progress.length, 0);
-    const totalCompleted = students.reduce((acc: number, s: any) => 
-      acc + s.stats.completed, 0);
-    
+    const totalCompleted = students.reduce((a: number, s: any) => a + s.stats.completed, 0);
     const summary = {
       totalStudents: students.length,
-      totalProgressRecords: totalRecords,
-      avgCompletionRate: students.length > 0
-        ? parseFloat((
-            students.reduce((acc: number, s: any) => acc + (s.stats.completionRate || 0), 0) / 
-            students.length
-          ).toFixed(1))
-        : 0,
       totalCompletedModules: totalCompleted,
+      avgCompletionRate:
+        students.length > 0
+          ? parseFloat(
+              (students.reduce((a: number, s: any) => a + s.stats.completionRate, 0) / students.length).toFixed(1)
+            )
+          : 0,
     };
 
-    await logAudit(
-      mentorUserId,
-      'PROGRESS_VIEW',
-      { filters, recordsCount: progress.length }
-    );
+    await logAudit(mentorUserId, 'PROGRESS_VIEW', { recordsCount: progress.length });
 
-    return {
-      data: { students, summary },
-      message: 'Mentor dashboard retrieved successfully',
-    };
+    return { data: { students, summary }, message: 'Mentor dashboard retrieved successfully' };
   }
 
   /**

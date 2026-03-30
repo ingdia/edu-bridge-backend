@@ -223,8 +223,22 @@ export const adminDashboardController = {
           isActive: true,
           createdAt: true,
           lastLogin: true,
-          studentProfile: { select: { id: true, fullName: true, gradeLevel: true, schoolName: true } },
-          mentorProfile: { select: { expertise: true } },
+          studentProfile: {
+            select: {
+              id: true,
+              fullName: true,
+              gradeLevel: true,
+              schoolName: true,
+              school: { select: { name: true } },
+            },
+          },
+          mentorProfile: {
+            select: {
+              expertise: true,
+              accessStatus: true,
+              school: { select: { name: true } },
+            },
+          },
           adminProfile: { select: { permissions: true } },
         },
       });
@@ -239,8 +253,14 @@ export const adminDashboardController = {
         fullName: u.studentProfile?.fullName || null,
         studentProfileId: u.studentProfile?.id || null,
         gradeLevel: u.studentProfile?.gradeLevel || null,
-        schoolName: u.studentProfile?.schoolName || null,
+        // Use FK school name first, fall back to plain schoolName string
+        schoolName:
+          u.studentProfile?.school?.name ||
+          u.studentProfile?.schoolName ||
+          u.mentorProfile?.school?.name ||
+          null,
         expertise: u.mentorProfile?.expertise || null,
+        accessStatus: u.mentorProfile?.accessStatus || null,
       }));
 
       res.json({ success: true, data: mapped, count: mapped.length });

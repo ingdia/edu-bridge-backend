@@ -64,6 +64,10 @@ export class ProgressController {
       const result = await ProgressService.getStudentDashboard(studentId, filters);
       res.status(200).json({ success: true, data: result.data, message: result.message });
     } catch (error) {
+      if (error instanceof Error && error.message === 'Student profile not found') {
+        res.status(200).json({ success: true, data: { progress: [], summary: { totalModules: 0, completed: 0, inProgress: 0, completionRate: 0, averageScore: null, totalTimeSpent: 0 } }, message: 'No profile yet' });
+        return;
+      }
       if (error instanceof Error) {
         res.status(400).json({ success: false, message: error.message });
         return;

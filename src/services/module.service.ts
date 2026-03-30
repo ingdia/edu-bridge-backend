@@ -326,21 +326,24 @@ export const getModulesForMentor = async (
   filters?: { type?: ExerciseType; difficulty?: string },
   ipAddress?: string
 ) => {
-  // Get mentor profile
-  const mentor = await prisma.mentorProfile.findUnique({
+  let mentor = await prisma.mentorProfile.findUnique({
     where: { userId: mentorUserId },
-    select: { id: true, assignedStudents: { select: { id: true } } },
+    select: { id: true, assignedModules: { select: { moduleId: true } } },
   });
 
   if (!mentor) {
-    throw new Error('Mentor profile not found');
+    mentor = await prisma.mentorProfile.create({
+      data: { userId: mentorUserId, expertise: [] },
+      select: { id: true, assignedModules: { select: { moduleId: true } } },
+    });
   }
 
-  const studentIds = mentor.assignedStudents.map(s => s.id);
+  const assignedModuleIds = mentor.assignedModules.map((m) => m.moduleId);
 
-  // Get modules that assigned students have progress on OR all active modules
   const whereClause: any = {
     isActive: true,
+    // If admin has assigned specific modules, filter to those only
+    ...(assignedModuleIds.length > 0 ? { id: { in: assignedModuleIds } } : {}),
     ...(filters?.type && { type: filters.type }),
     ...(filters?.difficulty && { difficulty: filters.difficulty }),
   };
@@ -363,13 +366,11 @@ export const getModulesForMentor = async (
   await logAudit(
     mentorUserId,
     'MODULE_LIST',
-    { filters, resultsCount: modules.length, role: 'MENTOR' },
+    { filters, resultsCount: modules.length, role: 'MENTOR', assignedOnly: assignedModuleIds.length > 0 },
     ipAddress
   );
 
-  return {
-    data: { modules },
-  };
+  return { data: { modules } };
 };
 
 // ─────────────────────────────────────────────────────────────

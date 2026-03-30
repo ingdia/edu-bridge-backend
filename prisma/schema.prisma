@@ -21,6 +21,12 @@ enum Role {
   ADMIN
 }
 
+enum MentorAccessStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum ExerciseType {
   LISTENING
   SPEAKING
@@ -68,6 +74,27 @@ enum OpportunityType {
 }
 
 // ─────────────────────────────────────────────────────────────
+// SCHOOL (Admin registers schools)
+// ─────────────────────────────────────────────────────────────
+
+model School {
+  id       String @id @default(uuid())
+  name     String @unique
+  district String?
+  province String?
+  isActive Boolean @default(true)
+
+  students StudentProfile[]
+  mentors  MentorProfile[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
+  @@index([isActive])
+}
+
+// ─────────────────────────────────────────────────────────────
 // CORE AUTH (SRS FR 1: Authentication & NFR 1: Security)
 // ─────────────────────────────────────────────────────────────
 
@@ -94,6 +121,7 @@ model User {
   auditLogs      AuditLog[]
   refreshTokens  RefreshToken[]
   passwordResetTokens PasswordResetToken[]
+  notifications  Notification[] @relation(name: "UserNotifications")
 
   @@index([email])
   @@index([role, isActive])
@@ -114,6 +142,10 @@ model StudentProfile {
   nationalId  String   @unique
   schoolName  String   @default("GS Ruyenzi")
   gradeLevel  String
+
+  // School relation
+  schoolId String?
+  school   School? @relation(fields: [schoolId], references: [id], onDelete: SetNull)
 
   // Parent/Guardian
   guardianName    String?
@@ -171,11 +203,22 @@ model MentorProfile {
   expertise String[]
   bio       String?  @db.Text
 
+  // Access control
+  accessStatus MentorAccessStatus @default(PENDING)
+  accessNote   String?
+
+  // School relation
+  schoolId String?
+  school   School? @relation(fields: [schoolId], references: [id], onDelete: SetNull)
+
   // Profile Photo
   profilePhotoUrl String?
 
   // Primary Assigned Students
   assignedStudents StudentProfile[] @relation(name: "AssignedMentor")
+
+  // Assigned Modules (admin assigns courses to mentor)
+  assignedModules MentorModule[]
 
   // Session-Based Interactions
   sessions MentorshipSession[]
@@ -190,6 +233,23 @@ model MentorProfile {
   updatedAt DateTime @updatedAt
 
   @@index([userId])
+}
+
+// Admin assigns specific modules to a mentor
+model MentorModule {
+  id       String @id @default(uuid())
+
+  mentorId String
+  mentor   MentorProfile  @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+
+  moduleId String
+  module   LearningModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  assignedAt DateTime @default(now())
+
+  @@unique([mentorId, moduleId])
+  @@index([mentorId])
+  @@index([moduleId])
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -231,6 +291,7 @@ model LearningModule {
 
   progress Progress[]
   exerciseSubmissions ExerciseSubmission[]
+  mentorAssignments MentorModule[]
 
   isActive   Boolean @default(true)
   orderIndex Int     @default(0)
@@ -547,8 +608,13 @@ model DigitalLiteracyProgress {
 model Notification {
   id        String   @id @default(uuid())
   
-  recipientId String
-  recipient   StudentProfile @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+  // Support any user role as recipient
+  recipientUserId String?
+  recipientUser   User?   @relation(fields: [recipientUserId], references: [id], onDelete: Cascade, name: "UserNotifications")
+
+  // Legacy student-only recipient (kept for backwards compatibility)
+  recipientId String?
+  recipient   StudentProfile? @relation(fields: [recipientId], references: [id], onDelete: Cascade)
   
   type    NotificationType
   status  NotificationStatus @default(UNREAD)

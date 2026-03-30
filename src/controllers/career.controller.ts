@@ -58,6 +58,10 @@ export class CareerController {
       const result = await CareerService.createApplication(validated, studentUserId);
       res.status(201).json({ success: true, data: result.data, message: result.message });
     } catch (error) {
+      if (error instanceof Error && error.message === 'Student profile not found') {
+        res.status(400).json({ success: false, message: 'Complete your profile before applying' });
+        return;
+      }
       if (error instanceof Error) {
         res.status(400).json({ success: false, message: error.message });
         return;
@@ -100,6 +104,10 @@ export class CareerController {
       const result = await CareerService.getStudentApplications(studentUserId);
       res.status(200).json({ success: true, data: result.data, message: result.message });
     } catch (error) {
+      if (error instanceof Error && error.message === 'Student profile not found') {
+        res.status(200).json({ success: true, data: [], message: 'No profile yet' });
+        return;
+      }
       if (error instanceof Error) {
         res.status(400).json({ success: false, message: error.message });
         return;

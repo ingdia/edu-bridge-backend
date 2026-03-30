@@ -26,6 +26,7 @@ export const registerUser = async (
   ipAddress?: string
 ): Promise<RegisterOutput> => {
   const { email, password, role, fullName, nationalId, dateOfBirth, gradeLevel, guardianName, guardianContact } = data;
+  const schoolId = (data as any).schoolId as string | undefined;
 
   // FR 1.1: Check if email already exists
   const existingUser = await prisma.user.findUnique({
@@ -43,29 +44,66 @@ export const registerUser = async (
   const verificationToken = crypto.randomBytes(32).toString('hex');
   const verificationTokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-  // Create user with role (SRS 2.3: User Classes)
+  // Create user with role — mentors start INACTIVE until admin approves
   const user = await prisma.user.create({
     data: {
       email,
       password: hashedPassword,
       role: role as Role,
+      isActive: role === 'MENTOR' ? false : true,
       emailVerified: false,
       verificationToken,
       verificationTokenExpiresAt,
     },
   });
 
-  // FR 2: Create student profile if role is STUDENT
-  if (role === 'STUDENT' && fullName && nationalId && dateOfBirth) {
-    await prisma.studentProfile.create({
+  // FR 2: Create profile based on role
+  if (role === 'STUDENT') {
+    // Only create profile if we have at least a fullName
+    if (fullName) {
+      // Generate a temporary nationalId if not provided (student can update later)
+      const tempNationalId = nationalId || `TEMP-${user.id.replace(/-/g, '').slice(0, 12).toUpperCase()}`;
+      const tempDob = dateOfBirth ? new Date(dateOfBirth) : new Date('2000-01-01');
+
+      let schoolName = 'GS Ruyenzi';
+      if (schoolId) {
+        const school = await prisma.school.findUnique({ where: { id: schoolId }, select: { name: true } });
+        if (school) schoolName = school.name;
+      }
+
+      await prisma.studentProfile.create({
+        data: {
+          userId: user.id,
+          fullName,
+          dateOfBirth: tempDob,
+          gradeLevel: gradeLevel || 'Senior Four',
+          nationalId: tempNationalId,
+          guardianName: guardianName || null,
+          guardianContact: guardianContact || null,
+          schoolId: schoolId || null,
+          schoolName,
+        },
+      });
+    }
+  }
+
+  if (role === 'MENTOR') {
+    await prisma.mentorProfile.create({
       data: {
         userId: user.id,
-        fullName,
-        dateOfBirth: new Date(dateOfBirth),
-        gradeLevel: gradeLevel || 'Senior Four',
-        nationalId,
-        guardianName: guardianName || null,
-        guardianContact: guardianContact || null,
+        expertise: [],
+        bio: fullName ? `Mentor: ${fullName}` : null,
+        accessStatus: 'PENDING',
+        schoolId: schoolId || null,
+      },
+    });
+  }
+
+  if (role === 'ADMIN') {
+    await prisma.adminProfile.create({
+      data: {
+        userId: user.id,
+        permissions: [],
       },
     });
   }
@@ -139,6 +177,19 @@ export const loginUser = async (
 
   // Check if account is active
   if (!user.isActive) {
+    // Check if it's a pending mentor
+    if (user.role === 'MENTOR') {
+      const mentorProfile = await prisma.mentorProfile.findUnique({
+        where: { userId: user.id },
+        select: { accessStatus: true, accessNote: true },
+      });
+      if (mentorProfile?.accessStatus === 'PENDING') {
+        throw new Error('Your mentor account is pending approval from the administrator. You will be notified once approved.');
+      }
+      if (mentorProfile?.accessStatus === 'REJECTED') {
+        throw new Error(`Your mentor access request was rejected. ${mentorProfile.accessNote || 'Please contact the administrator.'}`);
+      }
+    }
     throw new Error('Account is deactivated. Contact administrator.');
   }
 

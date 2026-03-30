@@ -126,6 +126,10 @@ export class MentorshipController {
       const result = await MentorshipService.getStudentSessions(studentUserId, filters);
       res.status(200).json({ success: true, data: result.data, message: result.message });
     } catch (error) {
+      if (error instanceof Error && error.message === 'Student profile not found') {
+        res.status(200).json({ success: true, data: [], message: 'No profile yet' });
+        return;
+      }
       if (error instanceof Error) {
         res.status(400).json({ success: false, message: error.message });
         return;

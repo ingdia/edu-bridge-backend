@@ -23,13 +23,14 @@ export const sendMessage = async (
     throw new Error('Recipient not found');
   }
 
-  // Validate mentor-student relationship
+  // Validate messaging permissions
   if (senderRole === 'STUDENT') {
-    // Students can only message mentors
+    // Students can only message mentors or admins
     if (recipient.role !== 'MENTOR' && recipient.role !== 'ADMIN') {
       throw new Error('Students can only message mentors or administrators');
     }
   }
+  // Mentors can message students and admins — no restriction needed
 
   // Generate threadId if not provided (for new conversations)
   const threadId = data.threadId || `${[senderUserId, data.recipientUserId].sort().join('-')}`;
@@ -367,18 +368,23 @@ export const getConversationsList = async (userId: string) => {
           id: true,
           email: true,
           role: true,
-          studentProfile: {
-            select: { fullName: true },
-          },
-          mentorProfile: {
-            select: { id: true },
-          },
+          studentProfile: { select: { fullName: true } },
+          mentorProfile: { select: { bio: true } },
+          adminProfile: { select: { id: true } },
         },
       });
 
+      // Resolve display name for any role
+      const userName =
+        user?.studentProfile?.fullName ||
+        (user?.mentorProfile ? (user.email.split('@')[0]) : null) ||
+        (user?.adminProfile ? `Admin (${user.email.split('@')[0]})` : null) ||
+        user?.email ||
+        'Unknown';
+
       return {
         ...conv,
-        userName: user?.studentProfile?.fullName || user?.email || 'Unknown',
+        userName,
         userRole: user?.role,
       };
     })

@@ -14,7 +14,6 @@ const router = Router();
 router.get(
   '/',
   authenticate,
-  validate(getOpportunitiesQuerySchema),
   opportunityController.getOpportunities.bind(opportunityController)
 );
 

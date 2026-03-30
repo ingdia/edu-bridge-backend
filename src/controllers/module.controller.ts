@@ -328,7 +328,7 @@ export const getModulesForStudentHandler = async (req: Request, res: Response) =
     });
   } catch (error: any) {
     if (error.message === 'Student profile not found') {
-      return res.status(404).json({ success: false, message: error.message });
+      return res.status(200).json({ success: true, data: { modulesWithProgress: [] } });
     }
     console.error('[STUDENT_MODULES_ERROR]', error);
     res.status(500).json({

@@ -219,12 +219,14 @@ export class MentorshipService {
   }
 
   static async getMentorSessions(mentorUserId: string, filters?: GetSessionsQuery) {
-    const mentorProfile = await prisma.mentorProfile.findUnique({
+    let mentorProfile = await prisma.mentorProfile.findUnique({
       where: { userId: mentorUserId },
     });
 
     if (!mentorProfile) {
-      throw new Error('Mentor profile not found');
+      mentorProfile = await prisma.mentorProfile.create({
+        data: { userId: mentorUserId, expertise: [] },
+      });
     }
 
     const where: any = { mentorId: mentorProfile.id };

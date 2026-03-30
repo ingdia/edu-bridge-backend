@@ -45,8 +45,10 @@ export const registerSchema = z.object({
 
   nationalId: z
     .string()
-    .regex(/^\d{16}$/, 'National ID must be 16 digits') // Rwanda format
-    .optional(),
+    .regex(/^\d{16}$/, 'National ID must be 16 digits')
+    .optional()
+    .or(z.literal(''))
+    .transform((v) => v === '' ? undefined : v),
 
   dateOfBirth: z
     .string()
@@ -56,6 +58,7 @@ export const registerSchema = z.object({
   // FR 2.2: Parent/Guardian info (optional at registration)
   guardianName: z.string().max(100).trim().optional(),
   guardianContact: z.string().max(20).optional(),
+  schoolId: z.string().uuid().optional(),
 });
 
 export type RegisterInput = z.infer<typeof registerSchema>;

@@ -27,6 +27,26 @@ router.get(
   listModulesHandler
 );
 
+// ─────────────────────────────────────────────────────────────
+// ROLE-SPECIFIC ENDPOINTS — must be before /modules/:id
+// ─────────────────────────────────────────────────────────────
+
+// GET /api/modules/student - Modules available for current student
+router.get(
+  '/modules/student',
+  authenticate,
+  authorize(Role.STUDENT),
+  getModulesForStudentHandler
+);
+
+// GET /api/modules/mentor - Modules for mentor's assigned students
+router.get(
+  '/modules/mentor',
+  authenticate,
+  authorize(Role.MENTOR),
+  getModulesForMentorHandler
+);
+
 // GET /api/modules/:id - Get single module details (RBAC applied in service)
 router.get(
   '/modules/:id',
@@ -69,26 +89,6 @@ router.patch(
   authenticate,
   authorize(Role.ADMIN),
   toggleModuleStatusHandler
-);
-
-// ─────────────────────────────────────────────────────────────
-// ROLE-SPECIFIC ENDPOINTS
-// ─────────────────────────────────────────────────────────────
-
-// GET /api/modules/mentor - Modules for mentor's assigned students
-router.get(
-  '/modules/mentor',
-  authenticate,
-  authorize(Role.MENTOR),
-  getModulesForMentorHandler
-);
-
-// GET /api/modules/student - Modules available for current student
-router.get(
-  '/modules/student',
-  authenticate,
-  authorize(Role.STUDENT),
-  getModulesForStudentHandler
 );
 
 export default router;

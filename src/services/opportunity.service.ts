@@ -2,11 +2,25 @@ import prisma from '../config/database';
 
 export class OpportunityService {
   // Create opportunity
-  async createOpportunity(adminId: string, data: any) {
+  async createOpportunity(adminUserId: string, data: any) {
+    // postedBy is a FK to AdminProfile.id, not User.id
+    let adminProfile = await prisma.adminProfile.findUnique({
+      where: { userId: adminUserId },
+      select: { id: true },
+    });
+
+    // Auto-create admin profile if missing (existing accounts)
+    if (!adminProfile) {
+      adminProfile = await prisma.adminProfile.create({
+        data: { userId: adminUserId, permissions: [] },
+        select: { id: true },
+      });
+    }
+
     const opportunity = await prisma.opportunity.create({
       data: {
         ...data,
-        postedBy: adminId,
+        postedBy: adminProfile.id,
       },
     });
 
