@@ -27,6 +27,12 @@ enum MentorAccessStatus {
   REJECTED
 }
 
+enum StudentAccessStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum ExerciseType {
   LISTENING
   SPEAKING
@@ -147,6 +153,10 @@ model StudentProfile {
   schoolId String?
   school   School? @relation(fields: [schoolId], references: [id], onDelete: SetNull)
 
+  // Access control — student must be approved by mentor on same school
+  accessStatus StudentAccessStatus @default(PENDING)
+  accessNote   String?
+
   // Parent/Guardian
   guardianName    String?
   guardianContact String?
@@ -181,6 +191,9 @@ model StudentProfile {
   exerciseSubmissions ExerciseSubmission[]
   notifications   Notification[]
   digitalLiteracyProgress DigitalLiteracyProgress[]
+  mentorRequests  StudentMentorRequest[]
+  quizSubmissions QuizSubmission[]
+  weekProgress    StudentWeekProgress[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -220,6 +233,9 @@ model MentorProfile {
   // Assigned Modules (admin assigns courses to mentor)
   assignedModules MentorModule[]
 
+  // Student access requests
+  studentRequests StudentMentorRequest[]
+
   // Session-Based Interactions
   sessions MentorshipSession[]
   
@@ -247,9 +263,166 @@ model MentorModule {
 
   assignedAt DateTime @default(now())
 
+  // Mentor's weekly curriculum plan for this module
+  weeklyPlans WeeklyPlan[]
+
   @@unique([mentorId, moduleId])
   @@index([mentorId])
   @@index([moduleId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// CURRICULUM: WEEKLY PLANS (Mentor organises module into weeks)
+// ─────────────────────────────────────────────────────────────
+
+// Mentor breaks an assigned module into weekly plans
+model WeeklyPlan {
+  id             String      @id @default(uuid())
+  mentorModuleId String
+  mentorModule   MentorModule @relation(fields: [mentorModuleId], references: [id], onDelete: Cascade)
+
+  weekNumber  Int    // 1, 2, 3 ...
+  title       String // e.g. "Week 1: Introduction to Listening"
+  description String? @db.Text
+  isPublished Boolean @default(false) // mentor publishes when ready
+
+  lessons  WeekLesson[]
+  quizzes  MentorQuiz[]
+  studentProgress StudentWeekProgress[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([mentorModuleId, weekNumber])
+  @@index([mentorModuleId])
+}
+
+// Each week has one or more lessons (video, book, PDF, etc.)
+model WeekLesson {
+  id           String     @id @default(uuid())
+  weeklyPlanId String
+  weeklyPlan   WeeklyPlan @relation(fields: [weeklyPlanId], references: [id], onDelete: Cascade)
+
+  orderIndex  Int    @default(0)
+  title       String
+  contentType String // "youtube" | "pdf" | "book" | "article" | "audio" | "other"
+  contentUrl  String // YouTube URL, PDF link, etc.
+  description String? @db.Text
+  durationMin Int?   // estimated minutes
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([weeklyPlanId, orderIndex])
+}
+
+// Mentor creates a quiz for a week
+model MentorQuiz {
+  id           String     @id @default(uuid())
+  weeklyPlanId String
+  weeklyPlan   WeeklyPlan @relation(fields: [weeklyPlanId], references: [id], onDelete: Cascade)
+
+  title        String
+  instructions String?  @db.Text
+  passMark     Int      @default(50) // % needed to pass and unlock next week
+  maxAttempts  Int      @default(3)
+  isPublished  Boolean  @default(false)
+
+  questions   QuizQuestion[]
+  submissions QuizSubmission[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([weeklyPlanId])
+}
+
+// Quiz questions (multiple choice or open-ended)
+model QuizQuestion {
+  id     String     @id @default(uuid())
+  quizId String
+  quiz   MentorQuiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  orderIndex   Int    @default(0)
+  questionText String @db.Text
+  questionType String @default("multiple_choice") // "multiple_choice" | "open_ended"
+  options      Json?  // ["Option A", "Option B", "Option C", "Option D"]
+  correctAnswer String? // for multiple_choice: the correct option text
+  marks        Int    @default(1)
+
+  createdAt DateTime @default(now())
+
+  @@index([quizId, orderIndex])
+}
+
+// Student submits a quiz — mentor grades open-ended, auto-grade multiple choice
+model QuizSubmission {
+  id     String     @id @default(uuid())
+  quizId String
+  quiz   MentorQuiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  studentId String
+  student   StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  answers   Json   // { questionId: answer } map
+  score     Int?   // set after grading
+  isPassed  Boolean?
+  feedback  String? @db.Text // mentor's overall feedback
+  attempt   Int    @default(1)
+
+  status    String @default("submitted") // "submitted" | "graded"
+  submittedAt DateTime @default(now())
+  gradedAt    DateTime?
+  gradedBy    String?  // mentorProfile.id
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([quizId, studentId])
+  @@index([studentId, status])
+}
+
+// Tracks whether a student has passed a week (unlocks next week)
+model StudentWeekProgress {
+  id           String     @id @default(uuid())
+  weeklyPlanId String
+  weeklyPlan   WeeklyPlan @relation(fields: [weeklyPlanId], references: [id], onDelete: Cascade)
+
+  studentId String
+  student   StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  isUnlocked  Boolean  @default(false) // true once previous week quiz passed
+  isCompleted Boolean  @default(false)
+  unlockedAt  DateTime?
+  completedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([weeklyPlanId, studentId])
+  @@index([studentId])
+}
+
+// Student requests access to a mentor on the same school
+model StudentMentorRequest {
+  id        String @id @default(uuid())
+
+  studentId String
+  student   StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  mentorId  String
+  mentor    MentorProfile  @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+
+  status    StudentAccessStatus @default(PENDING)
+  note      String? // Student's message / reason
+  rejectNote String? // Mentor's rejection reason
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([studentId, mentorId])
+  @@index([mentorId, status])
+  @@index([studentId])
 }
 
 // ─────────────────────────────────────────────────────────────

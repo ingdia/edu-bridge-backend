@@ -229,6 +229,7 @@ export const adminDashboardController = {
               fullName: true,
               gradeLevel: true,
               schoolName: true,
+              accessStatus: true,
               school: { select: { name: true } },
             },
           },
@@ -260,7 +261,7 @@ export const adminDashboardController = {
           u.mentorProfile?.school?.name ||
           null,
         expertise: u.mentorProfile?.expertise || null,
-        accessStatus: u.mentorProfile?.accessStatus || null,
+        accessStatus: (u.studentProfile?.accessStatus as any) || (u.mentorProfile?.accessStatus as any) || null,
       }));
 
       res.json({ success: true, data: mapped, count: mapped.length });

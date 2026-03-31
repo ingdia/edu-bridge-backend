@@ -29,6 +29,8 @@ import opportunityMatchingRoutes from './routes/opportunityMatching.routes';
 import emailSimulationRoutes from './routes/emailSimulation.routes';
 import schoolRoutes from './routes/school.routes';
 import mentorAccessRoutes from './routes/mentorAccess.routes';
+import studentRequestRoutes from './routes/studentRequest.routes';
+import curriculumRoutes from './routes/curriculum.routes';
 import offlineSyncRoutes from './routes/offlineSync.routes';
 import healthRoutes from './routes/health.routes';
 import { apiLimiter, authLimiter } from './middlewares/rateLimiter.middleware';
@@ -121,6 +123,8 @@ app.use('/api/email-simulation', emailSimulationRoutes);
 app.use('/api/offline-sync', offlineSyncRoutes);
 app.use('/api/schools', schoolRoutes);
 app.use('/api/mentor-access', mentorAccessRoutes);
+app.use('/api/student-requests', studentRequestRoutes);
+app.use('/api/curriculum', curriculumRoutes);
 // ─────────────────────────────────────────────────────────────
 // GLOBAL ERROR HANDLER (SRS NFR 1: Security & Stability)
 // ─────────────────────────────────────────────────────────────

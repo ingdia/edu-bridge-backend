@@ -44,13 +44,13 @@ export const registerUser = async (
   const verificationToken = crypto.randomBytes(32).toString('hex');
   const verificationTokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-  // Create user with role — mentors start INACTIVE until admin approves
+  // Create user — students start INACTIVE until mentor approves, mentors until admin approves
   const user = await prisma.user.create({
     data: {
       email,
       password: hashedPassword,
       role: role as Role,
-      isActive: role === 'MENTOR' ? false : true,
+      isActive: role === 'ADMIN' ? true : false,
       emailVerified: false,
       verificationToken,
       verificationTokenExpiresAt,
@@ -177,7 +177,6 @@ export const loginUser = async (
 
   // Check if account is active
   if (!user.isActive) {
-    // Check if it's a pending mentor
     if (user.role === 'MENTOR') {
       const mentorProfile = await prisma.mentorProfile.findUnique({
         where: { userId: user.id },
@@ -188,6 +187,18 @@ export const loginUser = async (
       }
       if (mentorProfile?.accessStatus === 'REJECTED') {
         throw new Error(`Your mentor access request was rejected. ${mentorProfile.accessNote || 'Please contact the administrator.'}`);
+      }
+    }
+    if (user.role === 'STUDENT') {
+      const studentProfile = await prisma.studentProfile.findUnique({
+        where: { userId: user.id },
+        select: { accessStatus: true, accessNote: true },
+      });
+      if (studentProfile?.accessStatus === 'PENDING') {
+        throw new Error('Your account is pending approval from a mentor at your school. Please wait for a mentor to accept your request.');
+      }
+      if (studentProfile?.accessStatus === 'REJECTED') {
+        throw new Error(`Your access request was rejected. ${studentProfile.accessNote || 'Please contact your school mentor.'}`);
       }
     }
     throw new Error('Account is deactivated. Contact administrator.');
